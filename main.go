@@ -1,30 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"log"
 
-// type Game struct {
-// 	ebiten.Game
-// }
-// func (game *Game) Update() error {
-// 	return nil
-// }
-
-// func (game *Game) Draw(screen *ebiten.Image) {
-
-// }
-
-// func (game *Game) Layout(outerWidth, outerHeight int) (screenWidth, screenHeight int) {
-// 	return 640, 320
-// }
+	"github.com/tonible14012002/go_game/core/game"
+)
 
 func main() {
-	a := map[string]int{
-		"1": 1,
+	game := game.Game{}
+	game.Setup()
+	if err := game.Start(); err != nil {
+		log.Fatal(err)
+		return
 	}
-	Print("a", a)
-
-}
-
-func Print(name string, a interface{}) {
-	fmt.Printf("address of %s = %p\n", name, a)
 }

@@ -1,18 +1,19 @@
 package game
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/tonible14012002/go_game/core/window"
+)
 
 type Game struct {
+	myWindow window.Window
 }
 
-func (game *Game) Update() error {
-	return nil
+func (game *Game) Setup() {
+	game.myWindow = window.Window{Title: "WORM GAME"}
+	game.myWindow.Setup()
 }
 
-func (game *Game) Draw(screen *ebiten.Image) {
-
-}
-
-func (game *Game) Layout(outerWidth, outerHeight int) (screenWidth, screenHeight int) {
-	return 640, 320
+func (game *Game) Start() error {
+	return ebiten.RunGame(&game.myWindow)
 }

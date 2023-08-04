@@ -5,6 +5,6 @@ type Vector struct {
 	Y int
 }
 
-func IsEqual(vec1 Vector, vec2 Vector) bool {
+func (vec1 Vector) IsEqual(vec2 Vector) bool {
 	return vec1.X == vec2.X && vec1.Y == vec2.Y
 }

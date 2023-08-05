@@ -14,7 +14,7 @@ import (
 )
 
 type CallBackDict map[string]CallBack
-type StateCallBackDict map[state.GameState]CallBackDict
+type StateCallBackDict map[state.StateType]CallBackDict
 type BindingDict map[string]*Binding
 
 type EventManager struct {
@@ -26,10 +26,10 @@ func (eManager *EventManager) Setup() {
 	eManager.callbacks = make(StateCallBackDict)
 	eManager.bindings = make(BindingDict)
 
-	states := state.GetAllGameStates()
-	for _, gameState := range states {
+	states := state.GetAllGameStateTypes()
+	for _, stateType := range states {
 		emptyDict := make(CallBackDict)
-		eManager.callbacks[gameState] = emptyDict
+		eManager.callbacks[stateType] = emptyDict
 	}
 
 	err := eManager.loadBinding()
@@ -38,14 +38,14 @@ func (eManager *EventManager) Setup() {
 	}
 }
 
-func (eManager *EventManager) AddCallback(gState state.GameState, name string, f CallBack) {
+func (eManager *EventManager) AddCallback(gState state.StateType, name string, f CallBack) {
 	if _, exist := eManager.callbacks[gState]; !exist {
 		eManager.callbacks[gState] = make(CallBackDict)
 	}
 	eManager.callbacks[gState][name] = f
 }
 
-func (eManager *EventManager) RemoveCallback(gState state.GameState, name string) bool {
+func (eManager *EventManager) RemoveCallback(gState state.StateType, name string) bool {
 	if _, exist := eManager.callbacks[gState]; !exist {
 		return false
 	}
@@ -103,7 +103,7 @@ func (eManager *EventManager) loadBinding() error {
 	return nil
 }
 
-func (eManager *EventManager) Update(currentState state.GameState) {
+func (eManager *EventManager) Update(currentState state.StateType) {
 	for _, binding := range eManager.bindings {
 		for _, event := range binding.events {
 			if isKeyEvent(event.eType) {

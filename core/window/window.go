@@ -1,19 +1,20 @@
 package window
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/core/common"
-	eventutil "github.com/tonible14012002/go_game/core/event"
+	"github.com/tonible14012002/go_game/core/event"
+	"github.com/tonible14012002/go_game/core/state"
 )
 
 type Window struct {
 	Size     common.Vector
 	Title    string
 	clock    time.Time
-	EManager eventutil.EventManager
+	EManager event.EventManager
+	stateMgr state.StateManager
 }
 
 func (window *Window) resetClock() float64 {
@@ -24,6 +25,7 @@ func (window *Window) resetClock() float64 {
 
 func (window *Window) Setup() {
 	window.EManager.Setup()
+	window.stateMgr.Setup()
 	if window.Title == "" {
 		window.Title = "GO Game"
 	}
@@ -35,13 +37,14 @@ func (window *Window) Setup() {
 
 func (window *Window) Update() error {
 	elapsedTime := window.resetClock()
-	window.EManager.Update(0)
-	fmt.Println(elapsedTime)
+	window.EManager.Update(window.stateMgr.GetCurrentState())
+	window.stateMgr.Update(elapsedTime)
+	window.stateMgr.LateUpdate()
 	return nil
 }
 
 func (window *Window) Draw(screen *ebiten.Image) {
-	// TODO: pass screen to game object's render metho
+	window.stateMgr.Render()
 }
 
 func (window *Window) Layout(outerWidth, outerHeight int) (screenWidth, screenHeight int) {

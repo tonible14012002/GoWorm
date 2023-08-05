@@ -28,6 +28,6 @@ type StateInfo struct {
 	GameState BaseState
 }
 
-type StateStack []StateInfo
+type StateStack []*StateInfo
 type StateGenerator func() BaseState
 type StateFactory map[StateType]StateGenerator

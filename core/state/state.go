@@ -1,55 +1,114 @@
 package state
 
+import (
+	"errors"
+	"log"
+
+	"golang.org/x/exp/slices"
+)
+
 type StateManager struct {
 	states             StateStack
 	toRemoveStateTypes []StateType
 	factory            StateFactory
+	currentState       StateType
 }
 
-func (stateManager *StateManager) Setup() {
+func (stateMgr *StateManager) Setup() {
 	totalStates := len(GetAllGameStateTypes())
-	stateManager.factory = make(StateFactory)
-	stateManager.states = make(StateStack, 0, totalStates)
-	stateManager.toRemoveStateTypes = make([]StateType, 0, totalStates)
+	stateMgr.factory = make(StateFactory)
+	stateMgr.states = make(StateStack, 0, totalStates)
+	stateMgr.toRemoveStateTypes = make([]StateType, 0, totalStates)
 }
 
-func (stateManager *StateManager) RegisterState(stateType StateType, generator StateGenerator) {
-	stateManager.factory[stateType] = generator
+func (stateMgr *StateManager) RegisterState(stateType StateType, generator StateGenerator) {
+	stateMgr.factory[stateType] = generator
 }
 
-func (stateManager *StateManager) createState(stateType StateType) {
-
+func (stateMgr *StateManager) createState(stateType StateType) (*StateInfo, error) {
+	// Create New Registered State
+	if stateFactory, exist := stateMgr.factory[stateType]; exist {
+		newStateInfoPtr := &StateInfo{
+			Statetype: stateType,
+			GameState: stateFactory(),
+		}
+		stateMgr.states = append(stateMgr.states, newStateInfoPtr)
+		newStateInfoPtr.GameState.OnCreate()
+	}
+	return nil, errors.New("no State type match when creatstate")
 }
 
-func (stateManager *StateManager) SwitchTo(StateType StateType) {
+func (stateMgr *StateManager) SwitchTo(sType StateType) {
+	// Active new State
+	// If not in stack, Create new state
+	if sType == stateMgr.currentState {
+		return
+	}
 
-}
+	foundIndex := -1
+	var foundState *StateInfo = nil
 
-func (stateManager *StateManager) processRemoveRequest() {
-	// This method must call at the end of Global Update
-	toRemoveIndices := make([]int, 0, len(stateManager.toRemoveStateTypes))
-	for _, toRemoveStateType := range stateManager.toRemoveStateTypes {
-		for index, stateInfo := range stateManager.states {
-			if stateInfo.Statetype == toRemoveStateType {
-				toRemoveIndices = append(toRemoveIndices, index)
-			}
+	for i := range stateMgr.states {
+		if stateMgr.states[i].Statetype == sType {
+			lastState := stateMgr.states[len(stateMgr.states)-1]
+			lastState.GameState.Deactivate()
+			foundIndex = i
+			foundState = stateMgr.states[i]
+			break
 		}
 	}
-	// Remove
-	// for _, index := range toRemoveIndices {
+	if foundIndex != -1 {
+		stateMgr.states = append(stateMgr.states[0:foundIndex], stateMgr.states[foundIndex+1:]...)
+		stateMgr.states = append(stateMgr.states, foundState)
+		return
+	}
+	if len(stateMgr.states) != 0 {
+		lastState := stateMgr.states[len(stateMgr.states)-1]
+		lastState.GameState.Deactivate()
+	}
 
-	// }
+	newState, err := stateMgr.createState(sType)
+	if err != nil {
+		log.Fatal(err)
+	}
+	newState.GameState.Activate()
+	// State not found in stack
 }
 
-func (stateManager *StateManager) Remove(stateType StateType) {
-	stateManager.toRemoveStateTypes = append(stateManager.toRemoveStateTypes, stateType)
+func (stateMgr *StateManager) GetCurrentState() StateType { return stateMgr.currentState }
+func (stateMgr *StateManager) SetCurrentState(sType StateType) {
+	stateMgr.currentState = sType
 }
 
-func (stateManager *StateManager) HasState(stateType StateType) bool {
+func (stateMgr *StateManager) LateUpdate() {
+	stateMgr.processRemoveRequest()
+}
+
+func (stateMgr *StateManager) processRemoveRequest() {
+	// Destroy all to remove state
+	remainStatesSize := len(stateMgr.states) - len(stateMgr.toRemoveStateTypes)
+	remainStates := make(StateStack, 0, remainStatesSize)
+
+	for _, stateInfoPtr := range stateMgr.states {
+		if !slices.Contains(stateMgr.toRemoveStateTypes, stateInfoPtr.Statetype) {
+			remainStates = append(remainStates, stateInfoPtr)
+		} else {
+			stateInfoPtr.GameState.OnDestroy()
+		}
+	}
+	stateMgr.states = remainStates
+	stateMgr.toRemoveStateTypes = make([]StateType, 0, len(GetAllGameStateTypes()))
+}
+
+func (stateMgr *StateManager) Remove(stateType StateType) {
+	stateMgr.toRemoveStateTypes = append(stateMgr.toRemoveStateTypes, stateType)
+}
+
+func (stateMgr *StateManager) HasState(stateType StateType) bool {
 	// TRUE: stateType contained in stateStack and not wont be remove
-	for _, stateInfo := range stateManager.states {
-		if stateInfo.Statetype == stateType {
-			for _, toRemove := range stateManager.toRemoveStateType {
+	for _, stateInfoPtr := range stateMgr.states {
+		if stateInfoPtr.Statetype == stateType {
+			for _, toRemove := range stateMgr.toRemoveStateTypes {
 				if toRemove == stateType {
 					return false
 				}
@@ -60,34 +119,34 @@ func (stateManager *StateManager) HasState(stateType StateType) bool {
 	return false
 }
 
-func (stateManager *StateManager) Update(elapsed float64) {
-	if len(stateManager.states) == 0 {
+func (stateMgr *StateManager) Update(elapsed float64) {
+	if len(stateMgr.states) == 0 {
 		return
 	}
 	// render lower layer if current layer is transparent
-	states := stateManager.states
-	i := len(states) - 1
-	if states[i].GameState.IsTranscendent() && i > 0 {
+	stateInfoPtrs := stateMgr.states
+	i := len(stateInfoPtrs) - 1
+	if stateInfoPtrs[i].GameState.IsTranscendent() && i > 0 {
 		for i != 0 {
-			if !states[i].GameState.IsTranscendent() {
+			if !stateInfoPtrs[i].GameState.IsTranscendent() {
 				break
 			}
 			i--
 		}
-		for ; i < len(states); i++ {
-			states[i].GameState.Update(elapsed)
+		for ; i < len(stateInfoPtrs); i++ {
+			stateInfoPtrs[i].GameState.Update(elapsed)
 		}
 	} else {
-		states[i].GameState.Update(elapsed)
+		stateInfoPtrs[i].GameState.Update(elapsed)
 	}
 }
 
-func (stateManager *StateManager) Render() {
-	if len(stateManager.states) == 0 {
+func (stateMgr *StateManager) Render() {
+	if len(stateMgr.states) == 0 {
 		return
 	}
 	// render lower layer if current layer is transparent
-	states := stateManager.states
+	states := stateMgr.states
 	i := len(states) - 1
 	if states[i].GameState.IsTransparent() && i > 0 {
 		for i != 0 {

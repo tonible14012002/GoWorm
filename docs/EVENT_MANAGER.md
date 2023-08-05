@@ -4,14 +4,13 @@
 - ebiten
 ```go
 IsKeyPressed(key ebiten.Key) bool
+Wheel() xOff, yOff float64
 // AppendInputChars(chars []runes) []runes
 // IsFocused() bool
 // IsFullScreen() bool
 // IsWindowResizable() bool
 // SetFullscreen(fullscreen bool)
 // SetScreenTransparent(transparent bool)
-// Wheel() xOff, yOff float64
-
 ```
 - ebiten/inpututils
 ```go

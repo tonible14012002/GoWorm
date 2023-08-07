@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/tonible14012002/go_game/core/common"
-	"github.com/tonible14012002/go_game/core/event"
-	"github.com/tonible14012002/go_game/core/state"
+	"github.com/tonible14012002/go_game/engine/common"
+	"github.com/tonible14012002/go_game/engine/event"
+	"github.com/tonible14012002/go_game/engine/state"
 	"github.com/tonible14012002/go_game/states/intro"
 	"github.com/tonible14012002/go_game/states/menu"
 )

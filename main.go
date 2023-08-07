@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/tonible14012002/go_game/core/game"
+	"github.com/tonible14012002/go_game/engine/game"
 )
 
 func main() {

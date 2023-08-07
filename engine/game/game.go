@@ -2,7 +2,7 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/tonible14012002/go_game/core/window"
+	"github.com/tonible14012002/go_game/engine/window"
 )
 
 type Game struct {

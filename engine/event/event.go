@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/tonible14012002/go_game/core/state"
+	"github.com/tonible14012002/go_game/engine/state"
 )
 
 type CallBackDict map[string]CallBack

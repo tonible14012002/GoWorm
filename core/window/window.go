@@ -1,12 +1,15 @@
 package window
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/core/common"
 	"github.com/tonible14012002/go_game/core/event"
 	"github.com/tonible14012002/go_game/core/state"
+	"github.com/tonible14012002/go_game/states/intro"
+	"github.com/tonible14012002/go_game/states/menu"
 )
 
 type Window struct {
@@ -26,6 +29,18 @@ func (window *Window) resetClock() float64 {
 func (window *Window) Setup() {
 	window.EManager.Setup()
 	window.stateMgr.Setup()
+	window.stateMgr.RegisterState(state.Intro, func() state.BaseState {
+		return &intro.StateIntro{}
+	})
+	window.stateMgr.RegisterState(state.Menu, func() state.BaseState {
+		return &menu.StateGame{}
+	})
+	window.EManager.AddCallback(state.Intro, "ENTER", func(*event.EventDetail) {
+		fmt.Println("Switching to menu....")
+		window.stateMgr.SwitchTo(state.Menu)
+	})
+	window.stateMgr.SwitchTo(state.Intro)
+
 	if window.Title == "" {
 		window.Title = "GO Game"
 	}
@@ -37,8 +52,8 @@ func (window *Window) Setup() {
 
 func (window *Window) Update() error {
 	elapsedTime := window.resetClock()
-	window.EManager.Update(window.stateMgr.GetCurrentState())
 	window.stateMgr.Update(elapsedTime)
+	window.EManager.Update(window.stateMgr.GetCurrentState())
 	window.stateMgr.LateUpdate()
 	return nil
 }

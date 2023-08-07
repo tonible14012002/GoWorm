@@ -2,6 +2,7 @@ package state
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"golang.org/x/exp/slices"
@@ -21,8 +22,13 @@ func (stateMgr *StateManager) Setup() {
 	stateMgr.toRemoveStateTypes = make([]StateType, 0, totalStates)
 }
 
+func (stateMgr *StateManager) GetAllStateFactories() StateFactory {
+	return stateMgr.factory
+}
+
 func (stateMgr *StateManager) RegisterState(stateType StateType, generator StateGenerator) {
 	stateMgr.factory[stateType] = generator
+	fmt.Println(stateMgr.factory)
 }
 
 func (stateMgr *StateManager) createState(stateType StateType) (*StateInfo, error) {
@@ -34,6 +40,7 @@ func (stateMgr *StateManager) createState(stateType StateType) (*StateInfo, erro
 		}
 		stateMgr.states = append(stateMgr.states, newStateInfoPtr)
 		newStateInfoPtr.GameState.OnCreate()
+		return newStateInfoPtr, nil
 	}
 	return nil, errors.New("no State type match when creatstate")
 }
@@ -73,6 +80,7 @@ func (stateMgr *StateManager) SwitchTo(sType StateType) {
 	}
 	newState.GameState.Activate()
 	// State not found in stack
+	stateMgr.SetCurrentState(sType)
 }
 
 func (stateMgr *StateManager) GetCurrentState() StateType { return stateMgr.currentState }

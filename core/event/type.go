@@ -34,9 +34,10 @@ type Event struct {
 type EventDetail struct {
 	// Hold all the Event Detail for sharing
 	Name        string
-	TextEntered rune
-	KeyCode     int
-	MouseCode   int
+	TextEntered rune //
+	KeyCode     int  //
+	MouseCode   int  //
+
 	MouseWheelX float64
 	MouseWheelY float64
 	MouseX      int

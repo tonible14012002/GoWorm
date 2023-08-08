@@ -1,5 +1,11 @@
 package state
 
+import (
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
 type StateType int
 
 const (
@@ -15,8 +21,8 @@ type BaseState interface {
 	OnDestroy()
 	Activate()
 	Deactivate()
-	Update(float64)
-	Render()
+	Update(time.Duration)
+	Render(*ebiten.Image)
 	SetTransparent(bool)
 	IsTransparent() bool
 	SetTranscendent(bool)

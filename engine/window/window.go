@@ -1,7 +1,6 @@
 package window
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,7 +8,6 @@ import (
 	"github.com/tonible14012002/go_game/engine/event"
 	"github.com/tonible14012002/go_game/engine/state"
 	"github.com/tonible14012002/go_game/states/intro"
-	"github.com/tonible14012002/go_game/states/menu"
 )
 
 type Window struct {
@@ -20,8 +18,8 @@ type Window struct {
 	stateMgr state.StateManager
 }
 
-func (window *Window) resetClock() float64 {
-	elapsedTime := float64(time.Since(window.clock))
+func (window *Window) resetClock() time.Duration {
+	elapsedTime := time.Since(window.clock)
 	window.clock = time.Now()
 	return elapsedTime
 }
@@ -29,25 +27,22 @@ func (window *Window) resetClock() float64 {
 func (window *Window) Setup() {
 	window.EManager.Setup()
 	window.stateMgr.Setup()
-	window.stateMgr.RegisterState(state.Intro, func() state.BaseState {
-		return &intro.StateIntro{}
-	})
-	window.stateMgr.RegisterState(state.Menu, func() state.BaseState {
-		return &menu.StateGame{}
-	})
-	window.EManager.AddCallback(state.Intro, "ENTER", func(*event.EventDetail) {
-		fmt.Println("Switching to menu....")
-		window.stateMgr.SwitchTo(state.Menu)
-	})
-	window.stateMgr.SwitchTo(state.Intro)
+	window.clock = time.Now()
 
 	if window.Title == "" {
 		window.Title = "GO Game"
 	}
 	if window.Size.IsEqual(common.Vector{X: 0, Y: 0}) {
-		window.Size = common.Vector{X: 640, Y: 320}
+		window.Size = common.Vector{X: 800, Y: 460}
 	}
+	ebiten.SetWindowSize(800, 460)
 	ebiten.SetWindowTitle(window.Title)
+
+	// Intro State
+	window.stateMgr.RegisterState(state.Intro, func() state.BaseState {
+		return &intro.StateIntro{}
+	})
+	window.stateMgr.SwitchTo(state.Intro)
 }
 
 func (window *Window) Update() error {
@@ -59,7 +54,7 @@ func (window *Window) Update() error {
 }
 
 func (window *Window) Draw(screen *ebiten.Image) {
-	window.stateMgr.Render()
+	window.stateMgr.Render(screen)
 }
 
 func (window *Window) Layout(outerWidth, outerHeight int) (screenWidth, screenHeight int) {

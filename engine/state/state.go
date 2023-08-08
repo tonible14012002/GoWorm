@@ -2,9 +2,10 @@ package state
 
 import (
 	"errors"
-	"fmt"
 	"log"
+	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"golang.org/x/exp/slices"
 )
 
@@ -28,7 +29,6 @@ func (stateMgr *StateManager) GetAllStateFactories() StateFactory {
 
 func (stateMgr *StateManager) RegisterState(stateType StateType, generator StateGenerator) {
 	stateMgr.factory[stateType] = generator
-	fmt.Println(stateMgr.factory)
 }
 
 func (stateMgr *StateManager) createState(stateType StateType) (*StateInfo, error) {
@@ -127,7 +127,7 @@ func (stateMgr *StateManager) HasState(stateType StateType) bool {
 	return false
 }
 
-func (stateMgr *StateManager) Update(elapsed float64) {
+func (stateMgr *StateManager) Update(elapsed time.Duration) {
 	if len(stateMgr.states) == 0 {
 		return
 	}
@@ -149,7 +149,7 @@ func (stateMgr *StateManager) Update(elapsed float64) {
 	}
 }
 
-func (stateMgr *StateManager) Render() {
+func (stateMgr *StateManager) Render(screen *ebiten.Image) {
 	if len(stateMgr.states) == 0 {
 		return
 	}
@@ -164,9 +164,9 @@ func (stateMgr *StateManager) Render() {
 			i--
 		}
 		for ; i < len(states); i++ {
-			states[i].GameState.Render()
+			states[i].GameState.Render(screen)
 		}
 	} else {
-		states[i].GameState.Render()
+		states[i].GameState.Render(screen)
 	}
 }

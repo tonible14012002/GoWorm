@@ -43,7 +43,6 @@ func (eManager *EventManager) AddCallback(gState state.StateType, name string, f
 		eManager.callbacks[gState] = make(CallBackDict)
 	}
 	eManager.callbacks[gState][name] = f
-	fmt.Println("Adding callback...", gState, name, f)
 }
 
 func (eManager *EventManager) RemoveCallback(gState state.StateType, name string) bool {
@@ -74,7 +73,6 @@ func (eManager *EventManager) loadBinding() error {
 	}
 
 	for i := range configs {
-		fmt.Println()
 		keyConfig := &configs[i]
 		sections := strings.Split(*keyConfig, " ")
 		if len(sections) < 2 {
@@ -99,7 +97,6 @@ func (eManager *EventManager) loadBinding() error {
 		}
 		eManager.addBinding(&newBinding)
 	}
-	fmt.Println(eManager.bindings)
 	file.Close()
 	return nil
 }

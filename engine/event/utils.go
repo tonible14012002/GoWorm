@@ -12,7 +12,6 @@ func IsRepeatingKeyPressed(k ebiten.Key) bool {
 	)
 
 	d := inpututil.KeyPressDuration(k)
-	// fmt.Println("d", d)
 	if d == 1 {
 		return true
 	}

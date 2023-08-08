@@ -1,6 +1,9 @@
 package menu
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type StateGame struct {
 	isTransparent  bool
@@ -29,7 +32,7 @@ func (intro *StateGame) Deactivate() {
 	fmt.Println("Deactivate")
 }
 
-func (intro *StateGame) Update(elapsed float64) {
+func (intro *StateGame) Update(elapsed time.Duration) {
 	if intro.isActivated {
 		fmt.Println("Running Game")
 	}

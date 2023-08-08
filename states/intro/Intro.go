@@ -1,44 +1,52 @@
 package intro
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/tonible14012002/go_game/engine/common"
+	"github.com/tonible14012002/go_game/game/entity"
+)
 
 type StateIntro struct {
-	isTransparent  bool
-	isTranscendent bool
-	name           string
-	isActivated    bool
-	isUpdated      bool
+	isTransparent   bool
+	isTranscendent  bool
+	clock           time.Duration
+	introTextSprite *entity.Player
 }
 
 func (intro *StateIntro) OnCreate() {
-	fmt.Println("OnCreating...")
-	intro.name = "Creating"
-	intro.isActivated = false
-	intro.isUpdated = false
+	intro.clock = 0
+	x, _ := ebiten.WindowSize()
+	intro.introTextSprite = &entity.Player{
+		Pos:  common.Vectorf{X: float64(x) / 2, Y: 0},
+		Velo: common.Vectorf{X: 0, Y: 20},
+	}
+	intro.introTextSprite.Setup()
+	fmt.Println(intro.introTextSprite.Pos)
 }
 
 func (intro *StateIntro) OnDestroy() {
-	fmt.Println("Destroying...")
 }
 
 func (intro *StateIntro) Activate() {
-	// Begin
-	fmt.Println("Activate...")
 }
 
 func (intro *StateIntro) Deactivate() {
-	fmt.Println("Deactivate...")
 }
 
-func (intro *StateIntro) Update(elapsed float64) {
-	if !intro.isUpdated {
-		fmt.Println("update state")
+func (intro *StateIntro) Update(elapsed time.Duration) {
+	fmt.Println("update state")
+	intro.clock += elapsed
+	if intro.clock.Seconds() >= 6 {
+		intro.introTextSprite.Velo = common.Vectorf{} // Velo=0
 	}
-	intro.isUpdated = true
+	intro.introTextSprite.Update(elapsed)
 }
 
-func (intro *StateIntro) Render() {
-
+func (intro *StateIntro) Render(screen *ebiten.Image) {
+	intro.introTextSprite.Render(screen)
 }
 
 func (intro *StateIntro) SetTransparent(isTransparent bool) {

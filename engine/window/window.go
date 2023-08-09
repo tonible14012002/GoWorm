@@ -45,6 +45,8 @@ func (window *Window) Setup() {
 	window.stateMgr.RegisterState(schema.Intro, func() state.BaseState {
 		return &intro.StateIntro{}
 	})
+
+	// Game State
 	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
 		return &game.StateGame{}
 	})

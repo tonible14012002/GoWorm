@@ -8,6 +8,7 @@ import (
 	"github.com/tonible14012002/go_game/engine/event"
 	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
+	"github.com/tonible14012002/go_game/states/game"
 	"github.com/tonible14012002/go_game/states/intro"
 )
 
@@ -43,6 +44,9 @@ func (window *Window) Setup() {
 	// Intro State
 	window.stateMgr.RegisterState(schema.Intro, func() state.BaseState {
 		return &intro.StateIntro{}
+	})
+	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
+		return &game.StateGame{}
 	})
 	window.stateMgr.SwitchTo(schema.Intro)
 }

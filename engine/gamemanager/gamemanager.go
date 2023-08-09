@@ -1,4 +1,4 @@
-package game
+package gamemanager
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

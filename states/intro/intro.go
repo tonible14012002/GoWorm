@@ -45,7 +45,7 @@ func (intro *StateIntro) OnCreate(stateMgr *state.StateManager, eventMgr *event.
 
 	x, y := ebiten.WindowSize()
 	intro.contents[NAME] = "Go Worm"
-	intro.contents[MESSAGE] = "Press 'A' to start"
+	intro.contents[MESSAGE] = "Press 'SPACE' to start"
 
 	tt, ttErr := opentype.Parse(fonts.PressStart2P_ttf)
 	if ttErr != nil {
@@ -86,13 +86,13 @@ func (intro *StateIntro) OnDestroy() {
 }
 
 func (intro *StateIntro) Activate() {
-	intro.eventMgr.AddCallback(schema.Intro, "ENTER", func(ed *event.EventDetail) {
+	intro.eventMgr.AddCallback(schema.Intro, "SPACE", func(ed *event.EventDetail) {
 		intro.stateMgr.SwitchTo(schema.Game)
 	})
 }
 
 func (intro *StateIntro) Deactivate() {
-	intro.eventMgr.RemoveCallback(schema.Intro, "ENTER")
+	intro.eventMgr.RemoveCallback(schema.Intro, "SPACE")
 }
 
 func (intro *StateIntro) Update(elapsed time.Duration) {

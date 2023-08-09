@@ -38,6 +38,7 @@ func (window *Window) Setup() {
 	if window.Size.IsEqual(common.Vector{X: 0, Y: 0}) {
 		window.Size = common.Vector{X: 800, Y: 460}
 	}
+
 	ebiten.SetWindowSize(800, 460)
 	ebiten.SetWindowTitle(window.Title)
 
@@ -46,7 +47,6 @@ func (window *Window) Setup() {
 		return &intro.StateIntro{}
 	})
 
-	// Game State
 	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
 		return &game.StateGame{}
 	})

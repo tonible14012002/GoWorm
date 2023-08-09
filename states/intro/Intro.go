@@ -6,6 +6,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/engine/common"
+	"github.com/tonible14012002/go_game/engine/event"
+	"github.com/tonible14012002/go_game/engine/state"
 	"github.com/tonible14012002/go_game/game/entity"
 )
 
@@ -16,7 +18,7 @@ type StateIntro struct {
 	introTextSprite *entity.Player
 }
 
-func (intro *StateIntro) OnCreate() {
+func (intro *StateIntro) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
 	intro.clock = 0
 	x, _ := ebiten.WindowSize()
 	intro.introTextSprite = &entity.Player{

@@ -1,6 +1,9 @@
 package event
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/tonible14012002/go_game/engine/schema"
+)
 
 type EventType int
 
@@ -60,3 +63,7 @@ func (b *Binding) BindEvent(e Event) {
 type KeyEventChecker func(e ebiten.Key) bool
 
 type MouseEventChecker func(e ebiten.MouseButton) bool
+
+type CallBackDict map[string]CallBack
+type StateCallBackDict map[schema.StateType]CallBackDict
+type BindingDict map[string]*Binding

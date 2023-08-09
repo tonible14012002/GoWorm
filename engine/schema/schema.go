@@ -1,8 +1,20 @@
 package schema
 
-import "github.com/hajimehoshi/ebiten/v2"
+type StateType int
 
-type GameObject interface {
-	Update(elapsedTime float64)
-	Render(screen *ebiten.Image)
+const (
+	Global StateType = -1
+	Intro  StateType = iota
+	Menu
+	Game
+	Ending
+)
+
+func GetAllGameStateTypes() []StateType {
+	return []StateType{
+		Intro,
+		Menu,
+		Game,
+		Ending,
+	}
 }

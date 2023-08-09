@@ -4,20 +4,12 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-)
-
-type StateType int
-
-const (
-	Global StateType = -1
-	Intro  StateType = iota
-	Menu
-	Game
-	Ending
+	"github.com/tonible14012002/go_game/engine/event"
+	"github.com/tonible14012002/go_game/engine/schema"
 )
 
 type BaseState interface {
-	OnCreate()
+	OnCreate(*StateManager, *event.EventManager)
 	OnDestroy()
 	Activate()
 	Deactivate()
@@ -30,10 +22,10 @@ type BaseState interface {
 }
 
 type StateInfo struct {
-	Statetype StateType
+	Statetype schema.StateType
 	GameState BaseState
 }
 
 type StateStack []*StateInfo
 type StateGenerator func() BaseState
-type StateFactory map[StateType]StateGenerator
+type StateFactory map[schema.StateType]StateGenerator

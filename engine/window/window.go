@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/engine/common"
 	"github.com/tonible14012002/go_game/engine/event"
+	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
 	"github.com/tonible14012002/go_game/states/intro"
 )
@@ -26,6 +27,7 @@ func (window *Window) resetClock() time.Duration {
 
 func (window *Window) Setup() {
 	window.EManager.Setup()
+	window.stateMgr.RegisterEventManager(&window.EManager)
 	window.stateMgr.Setup()
 	window.clock = time.Now()
 
@@ -39,10 +41,10 @@ func (window *Window) Setup() {
 	ebiten.SetWindowTitle(window.Title)
 
 	// Intro State
-	window.stateMgr.RegisterState(state.Intro, func() state.BaseState {
+	window.stateMgr.RegisterState(schema.Intro, func() state.BaseState {
 		return &intro.StateIntro{}
 	})
-	window.stateMgr.SwitchTo(state.Intro)
+	window.stateMgr.SwitchTo(schema.Intro)
 }
 
 func (window *Window) Update() error {

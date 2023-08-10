@@ -1,7 +1,6 @@
 package animation
 
 import (
-	"fmt"
 	"image"
 	"log"
 	"time"
@@ -41,7 +40,7 @@ func (a *Animation) Setup() {
 	a.clock = 0
 	img, _, err := ebitenutil.NewImageFromFile(a.Src)
 	if err != nil {
-		log.Fatal(err, "asoidjaosidj")
+		log.Fatal(err, "Setup Animation fail")
 	}
 	a.img = img
 	a.size = a.img.Bounds().Size()
@@ -78,7 +77,6 @@ func (a *Animation) Update(elapsed time.Duration) {
 			}
 		}
 	}
-	fmt.Println(a.subImgPos, a.subImgSize)
 }
 
 func (a *Animation) Render(screen *ebiten.Image, op *ebiten.DrawImageOptions) {

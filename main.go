@@ -7,9 +7,9 @@ import (
 )
 
 func main() {
-	game := gamemanager.Game{}
-	game.Setup()
-	if err := game.Start(); err != nil {
+	gameManager := gamemanager.Game{}
+	gameManager.Setup()
+	if err := gameManager.Start(); err != nil {
 		log.Fatal(err)
 		return
 	}

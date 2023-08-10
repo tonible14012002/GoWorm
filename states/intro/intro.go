@@ -1,7 +1,6 @@
 package intro
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"time"
@@ -96,8 +95,6 @@ func (intro *StateIntro) Deactivate() {
 }
 
 func (intro *StateIntro) Update(elapsed time.Duration) {
-	fmt.Println("update state")
-
 	_, y := ebiten.WindowSize()
 
 	if intro.posYs[NAME] <= float64(y)/2 {

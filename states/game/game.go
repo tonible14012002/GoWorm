@@ -5,43 +5,56 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/engine/event"
+	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
 )
 
 type StateGame struct {
-	isTransparent  bool
-	isTranscendent bool
+	stateMgr *state.StateManager
+	eventMgr *event.EventManager
+	world    WorldMap
 }
 
-func (intro *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
+func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
+	game.stateMgr = stateMgr
+	game.eventMgr = eventMgr
+	x, y := ebiten.WindowSize()
+	game.world = WorldMap{Width: x / 3, Height: y / 3, GraphicSize: 3}
+	game.world.Setup()
 }
 
-func (intro *StateGame) OnDestroy() {
+func (game *StateGame) OnDestroy() {
 }
 
-func (intro *StateGame) Activate() {
+func (game *StateGame) Activate() {
+	game.eventMgr.AddCallback(schema.Game, "A", func(ed *event.EventDetail) {
+		game.stateMgr.SwitchTo(schema.Intro)
+	})
 }
 
-func (intro *StateGame) Deactivate() {
+func (game *StateGame) Deactivate() {
+	game.eventMgr.RemoveCallback(schema.Game, "A")
+
 }
 
-func (intro *StateGame) Update(elapsed time.Duration) {
+func (game *StateGame) Update(elapsed time.Duration) {
+	game.world.Update(elapsed)
 }
 
-func (intro *StateGame) Render(screen *ebiten.Image) {
+func (game *StateGame) Render(screen *ebiten.Image) {
+	game.world.Render(screen)
 }
 
-func (intro *StateGame) SetTransparent(isTransparent bool) {
+func (game *StateGame) SetTransparent(isTransparent bool) {
 }
 
-func (intro *StateGame) IsTransparent() bool {
-	return intro.isTransparent
+func (game *StateGame) IsTransparent() bool {
+	return false
 }
 
-func (intro *StateGame) SetTranscendent(isTranscendent bool) {
-	intro.isTranscendent = isTranscendent
+func (game *StateGame) SetTranscendent(isTranscendent bool) {
 }
 
-func (intro *StateGame) IsTranscendent() bool {
-	return intro.isTranscendent
+func (game *StateGame) IsTranscendent() bool {
+	return false
 }

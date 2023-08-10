@@ -39,6 +39,7 @@ func (eManager *EventManager) AddCallback(gState schema.StateType, name string, 
 		eManager.callbacks[gState] = make(CallBackDict)
 	}
 	eManager.callbacks[gState][name] = f
+	fmt.Println(eManager.callbacks[gState])
 }
 
 func (eManager *EventManager) RemoveCallback(gState schema.StateType, name string) bool {
@@ -136,6 +137,7 @@ func (eManager *EventManager) Update(currentState schema.StateType) {
 				}
 			}
 			if binding.happeningCount == len(binding.events) {
+				fmt.Print("")
 				currentStateCallback, curExist := eManager.callbacks[currentState][binding.name]
 				globalStateCallback, gloExist := eManager.callbacks[schema.Global][binding.name]
 				if curExist {

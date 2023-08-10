@@ -3,13 +3,13 @@ module github.com/tonible14012002/go_game
 go 1.20
 
 require (
+	github.com/KEINOS/go-noise v0.1.0-rc1
 	github.com/hajimehoshi/ebiten/v2 v2.5.6
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 	golang.org/x/image v0.6.0
 )
 
 require (
-	github.com/KEINOS/go-noise v0.1.0-rc1 // indirect
 	github.com/aquilax/go-perlin v1.1.0 // indirect
 	github.com/ebitengine/purego v0.4.0 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b // indirect

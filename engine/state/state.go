@@ -2,7 +2,6 @@ package state
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -79,29 +78,23 @@ func (stateMgr *StateManager) SwitchTo(sType schema.StateType) {
 	if foundIndex != -1 {
 		stateMgr.states = append(stateMgr.states[0:foundIndex], stateMgr.states[foundIndex+1:]...)
 		stateMgr.states = append(stateMgr.states, foundState)
-		fmt.Println("Found state")
-		fmt.Println("Activate", foundState.Statetype)
 		foundState.GameState.Activate()
 		stateMgr.SetCurrentState(sType)
 		return
 	}
 
-	fmt.Println("Not Found state, creating...")
 	if len(stateMgr.states) != 0 {
 		lastState := stateMgr.states[len(stateMgr.states)-1]
 		lastState.GameState.Deactivate()
-		fmt.Println("Dactivate", lastState.Statetype)
 	}
 
 	newState, err := stateMgr.createState(sType)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Activate", sType)
 	newState.GameState.Activate()
 	// State not found in stack
 	stateMgr.SetCurrentState(sType)
-	fmt.Println(stateMgr.states)
 }
 
 func (stateMgr *StateManager) GetCurrentState() schema.StateType { return stateMgr.currentState }

@@ -54,8 +54,8 @@ func (o *Object) Update(elapsed time.Duration) {
 }
 
 func (o *Object) Render(screen *ebiten.Image) {
-	posX := float32(o.pos.X) + float32(o.size)/2
-	posY := float32(o.pos.Y) + float32(o.size)/2
+	posX := float32(o.pos.X) - float32(o.size)/2
+	posY := float32(o.pos.Y) - float32(o.size)/2
 	// vector.DrawFilledCircle(screen, posX, posY, float32(o.size), color.RGBA{0x27, 0x37, 0x4d, 0xff}, false)
 	vector.DrawFilledRect(
 		screen,

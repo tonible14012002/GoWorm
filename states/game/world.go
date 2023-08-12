@@ -1,9 +1,9 @@
 package game
 
 import (
-	"fmt"
 	"image/color"
 	"log"
+	"math"
 	"math/rand"
 	"time"
 
@@ -99,6 +99,7 @@ func (w *WorldMap) Render(screen *ebiten.Image) {
 func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 	t := elapsed.Seconds()
 	for _, entity := range entities {
+		entity.SetStable(false)
 		pos := entity.GetPosition()
 		velo := entity.GetVelo()
 		accel := entity.GetAccel()
@@ -115,8 +116,58 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 			X: pos.X + potentialVelo.X*t,
 			Y: pos.Y + potentialVelo.Y*t,
 		}
-		entity.SetVelo(potentialVelo)
-		entity.SetPosition(potentialPos)
-		fmt.Println(entity.GetVelo())
+
+		veloAngle := potentialVelo.ToArcTan2f() // Current velo angle
+		radius := entity.GetRadius()
+		responseVelo := common.Vectorf{}
+		isCollision := false
+
+		for iteAngle := veloAngle - math.Pi/2; iteAngle <= veloAngle+math.Pi/2; iteAngle += math.Pi / 8 {
+			checkPos := potentialPos.Add(
+				common.Vectorf{
+					X: float64(radius) * math.Cos(iteAngle),
+					Y: float64(radius) * math.Sin(iteAngle),
+				},
+			)
+			posMapX, posMapY := int(checkPos.X)/w.graphicSize, int(checkPos.Y)/w.graphicSize
+			if posMapX >= w.width {
+				posMapX = w.width - 1
+			}
+			if posMapX < 0 {
+				posMapX = 0
+			}
+			if posMapY >= w.height {
+				posMapY = w.height - 1
+			}
+			if posMapY < 0 {
+				posMapY = 0
+			}
+			if w.world[posMapY][posMapX] {
+				responseVelo = responseVelo.Add(potentialPos.Minus(checkPos))
+				isCollision = true
+			}
+		}
+
+		if isCollision {
+			entity.SetStable(false)
+			respMag := math.Sqrt(math.Pow(responseVelo.X, 2) + math.Pow(responseVelo.Y, 2))
+			normalizeResp := common.Vectorf{
+				X: responseVelo.X / respMag,
+				Y: responseVelo.Y / respMag,
+			}
+			dot := potentialVelo.Dot(normalizeResp) // n * d
+			entity.SetVelo(
+				(potentialVelo.Minus(normalizeResp.Multi(2 * dot))).Multi(entity.GetFriction()),
+			)
+		} else {
+			entity.SetVelo(potentialVelo)
+			entity.SetPosition(potentialPos)
+		}
+		finalVelo := entity.GetVelo()
+		veloMag := math.Sqrt(math.Pow(finalVelo.X, 2) + math.Pow(finalVelo.Y, 2))
+
+		if veloMag < 0.1 {
+			entity.SetStable(true)
+		}
 	}
 }

@@ -2,9 +2,10 @@ package schema
 
 type StateType int
 
+const Global StateType = -1
 const (
-	Global StateType = -1
-	Intro  StateType = iota
+	None StateType = iota
+	Intro
 	Menu
 	Game
 	Ending

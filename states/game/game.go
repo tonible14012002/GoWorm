@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/tonible14012002/go_game/engine/common"
+	"github.com/tonible14012002/go_game/engine/constant"
 	"github.com/tonible14012002/go_game/engine/event"
 	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
@@ -20,10 +21,10 @@ type StateGame struct {
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
 	game.stateMgr = stateMgr
 	game.eventMgr = eventMgr
-	x, y := ebiten.WindowSize()
+	x, y := constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT
 	game.world = createWorld(x/3, y/3, 3, common.Vectorf{
 		X: 0,
-		Y: 20,
+		Y: 500,
 	})
 }
 
@@ -73,6 +74,6 @@ func (game *StateGame) AddEntityOnClick(detail *event.EventDetail) {
 		X: float64(detail.MouseX),
 		Y: float64(detail.MouseY),
 	}
-	newObject := EntityHandler(createObject(20, mousePos))
+	newObject := EntityHandler(createObject(10, mousePos))
 	game.entities = append(game.entities, newObject)
 }

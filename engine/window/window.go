@@ -26,20 +26,15 @@ func (window *Window) resetClock() time.Duration {
 	return elapsedTime
 }
 
-func (window *Window) Setup() {
+func (window *Window) Setup(title string, size common.Vector) {
 	window.EManager.Setup()
 	window.stateMgr.RegisterEventManager(&window.EManager)
 	window.stateMgr.Setup()
 	window.clock = time.Now()
+	window.Title = title
+	window.Size = size
 
-	if window.Title == "" {
-		window.Title = "GO Game"
-	}
-	if window.Size.IsEqual(common.Vector{X: 0, Y: 0}) {
-		window.Size = common.Vector{X: 800, Y: 460}
-	}
-
-	ebiten.SetWindowSize(800, 460)
+	ebiten.SetWindowSize(size.X, size.Y)
 	ebiten.SetWindowTitle(window.Title)
 
 	// Intro State
@@ -50,7 +45,7 @@ func (window *Window) Setup() {
 	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
 		return &game.StateGame{}
 	})
-	window.stateMgr.SwitchTo(schema.Intro)
+	window.stateMgr.SwitchTo(schema.Game)
 }
 
 func (window *Window) Update() error {

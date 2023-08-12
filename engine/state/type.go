@@ -15,9 +15,7 @@ type BaseState interface {
 	Deactivate()
 	Update(time.Duration)
 	Render(*ebiten.Image)
-	SetTransparent(bool)
 	IsTransparent() bool
-	SetTranscendent(bool)
 	IsTranscendent() bool
 }
 

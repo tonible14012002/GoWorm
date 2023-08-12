@@ -23,14 +23,12 @@ const (
 )
 
 type StateIntro struct {
-	isTransparent  bool
-	isTranscendent bool
-	contents       map[SectionType]string
-	fontFaces      map[SectionType]font.Face
-	posXs          map[SectionType]float64
-	posYs          map[SectionType]float64
-	stateMgr       *state.StateManager
-	eventMgr       *event.EventManager
+	contents  map[SectionType]string
+	fontFaces map[SectionType]font.Face
+	posXs     map[SectionType]float64
+	posYs     map[SectionType]float64
+	stateMgr  *state.StateManager
+	eventMgr  *event.EventManager
 }
 
 func (intro *StateIntro) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -112,18 +110,10 @@ func (intro *StateIntro) Render(screen *ebiten.Image) {
 	}
 }
 
-func (intro *StateIntro) SetTransparent(isTransparent bool) {
-	intro.isTransparent = isTransparent
-}
-
 func (intro *StateIntro) IsTransparent() bool {
-	return intro.isTransparent
-}
-
-func (intro *StateIntro) SetTranscendent(isTranscendent bool) {
-	intro.isTranscendent = isTranscendent
+	return false
 }
 
 func (intro *StateIntro) IsTranscendent() bool {
-	return intro.isTranscendent
+	return false
 }

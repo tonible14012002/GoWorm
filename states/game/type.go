@@ -15,9 +15,11 @@ type EntityHandler interface {
 	GetAccel() common.Vectorf
 	SetAccel(common.Vectorf)
 	IsStable() bool
+	SetStable(bool)
 	Update(elapsed time.Duration)
 	Render(screen *ebiten.Image)
-	Size() int
+	GetRadius() int
+	GetFriction() float64
 }
 
 type Entities []EntityHandler

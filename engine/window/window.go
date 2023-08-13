@@ -45,7 +45,7 @@ func (window *Window) Setup(title string, size common.Vector) {
 	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
 		return &game.StateGame{}
 	})
-	window.stateMgr.SwitchTo(schema.Game)
+	window.stateMgr.SwitchTo(schema.Intro)
 }
 
 func (window *Window) Update() error {

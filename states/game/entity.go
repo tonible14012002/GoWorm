@@ -53,7 +53,7 @@ func (o *Object) IsStable() bool        { return o.isStable }
 func (o *Object) SetStable(stable bool) { o.isStable = stable }
 
 func (o *Object) Update(elapsed time.Duration) {
-	//
+
 }
 
 func (o *Object) GetFriction() float64 { return 0.7 }

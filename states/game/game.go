@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -21,6 +20,7 @@ type StateGame struct {
 	world    WorldMap
 	entities Entities
 	randGen  *rand.Rand
+	camera   Camera
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -34,6 +34,14 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 
 	seed := time.Now().Second()
 	game.randGen = rand.New(rand.NewSource(int64(seed)))
+	game.camera = Camera{
+		ViewPort:   common.Vectorf{X: 800, Y: 400},
+		Pos:        common.Vectorf{X: 0, Y: 0},
+		zoomFactor: 50,
+		rotation:   0,
+		Cam:        ebiten.NewImage(constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT),
+	}
+	game.camera.SetCameraSpeed(300)
 }
 
 func (game *StateGame) OnDestroy() {
@@ -45,8 +53,19 @@ func (game *StateGame) Activate() {
 	})
 	game.eventMgr.AddCallback(schema.Game, "MouseLeftClick", game.AddEntityOnClick)
 	game.eventMgr.AddCallback(schema.Game, "CtrlMouseLeftClick", func(ed *event.EventDetail) {
-		fmt.Println("Boomb")
 		game.Boom(common.Vectorf{X: float64(ed.MouseX), Y: float64(ed.MouseY)})
+	})
+	game.eventMgr.AddCallback(schema.Game, "ShiftArrowUp", func(ed *event.EventDetail) {
+		game.camera.Move(UP)
+	})
+	game.eventMgr.AddCallback(schema.Game, "ShiftArrowDown", func(ed *event.EventDetail) {
+		game.camera.Move(DOWN)
+	})
+	game.eventMgr.AddCallback(schema.Game, "ShiftArrowLeft", func(ed *event.EventDetail) {
+		game.camera.Move(LEFT)
+	})
+	game.eventMgr.AddCallback(schema.Game, "ShiftArrowRight", func(ed *event.EventDetail) {
+		game.camera.Move(RIGHT)
 	})
 }
 
@@ -54,6 +73,10 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ESC")
 	game.eventMgr.RemoveCallback(schema.Game, "MouseLeftClick")
 	game.eventMgr.RemoveCallback(schema.Game, "CtrlMouseLeftClick")
+	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowUp")
+	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
+	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowDown")
+	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
@@ -65,13 +88,16 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		}
 	}
 	game.entities = remainEntities
+	game.camera.Update(elapsed)
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
-	game.world.Render(screen)
+	game.world.Render(game.camera.Cam)
 	for _, entity := range game.entities {
-		entity.Render(screen)
+		entity.Render(game.camera.Cam)
 	}
+
+	game.camera.Render(screen)
 }
 
 func (game *StateGame) IsTransparent() bool {

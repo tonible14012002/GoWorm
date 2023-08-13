@@ -9,6 +9,13 @@ import (
 	"github.com/tonible14012002/go_game/engine/common"
 )
 
+type MovingDirection int
+
+const (
+	Up MovingDirection = iota
+	Down
+)
+
 var (
 	crosshairAngleStep float64 = 0.05
 	crosshairRadius    float64 = 35
@@ -137,11 +144,11 @@ func (p *PlayerEntity) ToBeRemove() bool {
 func (p *PlayerEntity) SetIsActive(active bool) {
 	p.isActive = active
 }
-func (p *PlayerEntity) SetMovingDirection(movingDirection common.MovingDirection) {
+func (p *PlayerEntity) SetMovingDirection(movingDirection MovingDirection) {
 	switch movingDirection {
-	case common.Up:
+	case Up:
 		p.crosshairAngle += crosshairAngleStep
-	case common.Down:
+	case Down:
 		p.crosshairAngle -= crosshairAngleStep
 	}
 }

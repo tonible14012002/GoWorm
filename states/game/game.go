@@ -70,6 +70,8 @@ func (game *StateGame) Activate() {
 	})
 	game.eventMgr.AddCallback(schema.Game, "ArrowUp", func(ed *event.EventDetail) { game.MoveCrosshair(common.Up) })
 	game.eventMgr.AddCallback(schema.Game, "ArrowDown", func(ed *event.EventDetail) { game.MoveCrosshair(common.Down) })
+	game.eventMgr.AddCallback(schema.Game, "ArrowUp", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
+	game.eventMgr.AddCallback(schema.Game, "ArrowDown", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
 }
 
 func (game *StateGame) Deactivate() {
@@ -141,6 +143,6 @@ func (game *StateGame) Boom(mousePos common.Vectorf) {
 	game.entities = append(game.entities, debrises...)
 }
 
-func (game *StateGame) MoveCrosshair(direction common.MovingDirection) {
+func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 	game.currentPlayer.SetMovingDirection(direction)
 }

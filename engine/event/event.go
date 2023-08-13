@@ -138,17 +138,19 @@ func (eManager *EventManager) Update(currentState schema.StateType) {
 					// Updateing ...
 				}
 			}
-			if binding.happeningCount == len(binding.events) {
-				currentStateCallback, curExist := eManager.callbacks[currentState][binding.name]
-				globalStateCallback, gloExist := eManager.callbacks[schema.Global][binding.name]
-				if curExist {
-					currentStateCallback(&binding.detail)
-				}
-				if gloExist {
-					globalStateCallback(&binding.detail)
-				}
-			}
-			binding.happeningCount = 0
 		}
+
+		if binding.happeningCount == len(binding.events) {
+			currentStateCallback, curExist := eManager.callbacks[currentState][binding.name]
+			globalStateCallback, gloExist := eManager.callbacks[schema.Global][binding.name]
+			if curExist {
+				currentStateCallback(&binding.detail)
+			}
+			if gloExist {
+				globalStateCallback(&binding.detail)
+			}
+		}
+		binding.happeningCount = 0
+
 	}
 }

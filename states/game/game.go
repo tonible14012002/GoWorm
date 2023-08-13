@@ -15,12 +15,13 @@ import (
 )
 
 type StateGame struct {
-	stateMgr *state.StateManager
-	eventMgr *event.EventManager
-	world    WorldMap
-	entities Entities
-	randGen  *rand.Rand
-	camera   Camera
+	stateMgr      *state.StateManager
+	eventMgr      *event.EventManager
+	world         WorldMap
+	entities      Entities
+	randGen       *rand.Rand
+	camera        Camera
+	currentPlayer *PlayerEntity
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -113,7 +114,14 @@ func (game *StateGame) AddEntityOnClick(detail *event.EventDetail) {
 		X: float64(detail.MouseX),
 		Y: float64(detail.MouseY),
 	}
-	newObject := EntityHandler(createPlayer(10, mousePos))
+
+	if game.currentPlayer != nil {
+		game.currentPlayer.SetIsActive(false)
+	}
+
+	game.currentPlayer = createPlayer(10, mousePos)
+	newObject := EntityHandler(game.currentPlayer)
+	game.currentPlayer.SetIsActive(true)
 	game.entities = append(game.entities, newObject)
 }
 

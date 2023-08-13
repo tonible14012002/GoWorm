@@ -49,3 +49,10 @@ func (vec1 Vectorf) Multi(factor float64) Vectorf {
 		vec1.Y * factor,
 	}
 }
+
+type MovingDirection int
+
+const (
+	Up MovingDirection = iota
+	Down
+)

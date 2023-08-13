@@ -92,12 +92,6 @@ func (p *PlayerEntity) Update(elapsed time.Duration) {
 func (p *PlayerEntity) GetFriction() float64 { return 0.3 }
 
 func (p *PlayerEntity) RenderCrosshair(screen *ebiten.Image) {
-	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		p.crosshairAngle += crosshairAngleStep
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		p.crosshairAngle -= crosshairAngleStep
-	}
 	if p.crosshairAngle > 2*math.Pi {
 		p.crosshairAngle = 0
 	}
@@ -142,4 +136,12 @@ func (p *PlayerEntity) ToBeRemove() bool {
 }
 func (p *PlayerEntity) SetIsActive(active bool) {
 	p.isActive = active
+}
+func (p *PlayerEntity) SetMovingDirection(movingDirection common.MovingDirection) {
+	switch movingDirection {
+	case common.Up:
+		p.crosshairAngle += crosshairAngleStep
+	case common.Down:
+		p.crosshairAngle -= crosshairAngleStep
+	}
 }

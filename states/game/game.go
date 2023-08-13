@@ -68,6 +68,8 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ShiftArrowRight", func(ed *event.EventDetail) {
 		game.camera.Move(RIGHT)
 	})
+	game.eventMgr.AddCallback(schema.Game, "ArrowUp", func(ed *event.EventDetail) { game.MoveCrosshair(common.Up) })
+	game.eventMgr.AddCallback(schema.Game, "ArrowDown", func(ed *event.EventDetail) { game.MoveCrosshair(common.Down) })
 }
 
 func (game *StateGame) Deactivate() {
@@ -78,6 +80,8 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowDown")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
+	game.eventMgr.RemoveCallback(schema.Game, "ArrowUp")
+	game.eventMgr.RemoveCallback(schema.Game, "ArrowDown")
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
@@ -135,4 +139,8 @@ func (game *StateGame) Boom(mousePos common.Vectorf) {
 		debrises[i] = EntityHandler(createObject(3, mousePos, debrisVelo))
 	}
 	game.entities = append(game.entities, debrises...)
+}
+
+func (game *StateGame) MoveCrosshair(direction common.MovingDirection) {
+	game.currentPlayer.SetMovingDirection(direction)
 }

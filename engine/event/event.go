@@ -100,6 +100,9 @@ func (eManager *EventManager) loadBinding() error {
 func (eManager *EventManager) Update(currentState schema.StateType) {
 	for _, binding := range eManager.bindings {
 		for _, event := range binding.events {
+			mouseX, mouseY := ebiten.CursorPosition()
+			binding.detail.MouseX = mouseX
+			binding.detail.MouseY = mouseY
 			if isKeyEvent(event.eType) {
 				keyChecker := getKeyEventChecker(event.eType)
 				active := keyChecker(event.keyCode)

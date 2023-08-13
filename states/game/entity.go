@@ -10,11 +10,12 @@ import (
 )
 
 type Object struct {
-	pos      common.Vectorf
-	velo     common.Vectorf
-	accel    common.Vectorf
-	isStable bool
-	radius   int
+	pos              common.Vectorf
+	velo             common.Vectorf
+	accel            common.Vectorf
+	isStable         bool
+	radius           int
+	boundBeforeDeath uint8
 }
 
 func (o *Object) Setup(radius int, info ...common.Vectorf) *Object {
@@ -62,3 +63,16 @@ func (o *Object) Render(screen *ebiten.Image) {
 	posY := float32(o.pos.Y)
 	vector.DrawFilledCircle(screen, posX, posY, float32(o.radius), color.RGBA{0x27, 0x37, 0x4d, 0xff}, false)
 }
+func (o *Object) IsDeath() bool {
+	return o.boundBeforeDeath > 5
+}
+
+func (o *Object) ToBeRemove() bool {
+	return o.IsDeath()
+}
+
+func (o *Object) DoBouncing() {
+	o.boundBeforeDeath++
+}
+func (o *Object) DoFalling() {}
+func (o *Object) DoBomb()    {}

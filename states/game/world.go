@@ -19,10 +19,14 @@ type WorldMap struct {
 	height       int
 	graphicSize  int // actual pixel size of one block
 	gravityAccel common.Vectorf
+	randGen      *rand.Rand
 }
 
 func (w *WorldMap) Setup(width, height, graphicSize int, gravityAccel common.Vectorf) *WorldMap {
 	// Initialize world Map
+	seed := time.Now().Second()
+	w.randGen = rand.New(rand.NewSource(int64(seed)))
+
 	if width == 0 || height == 0 || graphicSize == 0 {
 		log.Fatal("width, height, graphic size must larger than zero")
 	}
@@ -52,9 +56,7 @@ func (w *WorldMap) ResetWorld() {
 }
 
 func (w *WorldMap) GenerateMap() {
-	seed := time.Now().Second()
-	randGen := rand.New(rand.NewSource(int64(seed)))
-	n, err := noise.New(noise.Perlin, randGen.Int63())
+	n, err := noise.New(noise.Perlin, w.randGen.Int63())
 
 	if err != nil {
 		log.Fatal("Generate map error")
@@ -96,14 +98,17 @@ func (w *WorldMap) Render(screen *ebiten.Image) {
 	}
 }
 
-func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
+func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) []int {
 	t := elapsed.Seconds()
-	for _, entity := range entities {
+
+	toRemove := make([]int, 0, 10)
+
+	for index, entity := range entities {
 		entity.SetStable(false)
 		pos := entity.GetPosition()
 		velo := entity.GetVelo()
 		accel := entity.GetAccel()
-		// NOTE: Current Entity dont have accel
+		// CALCULATE POTENTIAL VELO, POS
 		potentialAccel := common.Vectorf{
 			X: accel.X + w.gravityAccel.X,
 			Y: accel.Y + w.gravityAccel.Y,
@@ -122,6 +127,7 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 		responseVelo := common.Vectorf{}
 		isCollision := false
 
+		// CHECK COLLISION
 		for iteAngle := veloAngle - math.Pi/2; iteAngle <= veloAngle+math.Pi/2; iteAngle += math.Pi / 8 {
 			checkPos := potentialPos.Add(
 				common.Vectorf{
@@ -149,6 +155,7 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 		}
 
 		if isCollision {
+			// DO BOUNCING BEFORE SET NEW VELO, POS (do Animation..., etc)
 			entity.SetStable(false)
 			respMag := math.Sqrt(math.Pow(responseVelo.X, 2) + math.Pow(responseVelo.Y, 2))
 			normalizeResp := common.Vectorf{
@@ -159,7 +166,10 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 			entity.SetVelo(
 				(potentialVelo.Minus(normalizeResp.Multi(2 * dot))).Multi(entity.GetFriction()),
 			)
+			entity.DoBouncing()
 		} else {
+			// DO FALLING
+			entity.DoFalling()
 			entity.SetVelo(potentialVelo)
 			entity.SetPosition(potentialPos)
 		}
@@ -169,5 +179,9 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) {
 		if veloMag < 0.1 {
 			entity.SetStable(true)
 		}
+		if entity.ToBeRemove() {
+			toRemove = append(toRemove, index)
+		}
 	}
+	return toRemove
 }

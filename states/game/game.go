@@ -55,14 +55,8 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	}
 }
 
-func (game *StateGame) SetTransparent(isTransparent bool) {
-}
-
 func (game *StateGame) IsTransparent() bool {
 	return false
-}
-
-func (game *StateGame) SetTranscendent(isTranscendent bool) {
 }
 
 func (game *StateGame) IsTranscendent() bool {

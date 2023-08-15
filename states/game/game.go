@@ -142,5 +142,7 @@ func (game *StateGame) Boom(mousePos common.Vectorf) {
 }
 
 func (game *StateGame) MoveCrosshair(direction MovingDirection) {
-	game.currentPlayer.SetMovingDirection(direction)
+	if game.currentPlayer != nil {
+		game.currentPlayer.SetMovingDirection(direction)
+	}
 }

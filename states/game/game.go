@@ -27,6 +27,8 @@ type StateGame struct {
 	currentTeamId int
 	teamCount     int
 	teamMemCount  int
+	currentMissle *Missile
+	isFiring      bool
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -95,6 +97,8 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	game.currentTeamId = 0
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
+
+	game.isFiring = false
 }
 
 func (game *StateGame) OnDestroy() {
@@ -119,9 +123,11 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ShiftArrowRight", func(ed *event.EventDetail) {
 		game.camera.Move(RIGHT)
 	})
-	game.eventMgr.AddCallback(schema.Game, "ArrowUp", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
-	game.eventMgr.AddCallback(schema.Game, "ArrowDown", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
 	game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
+	game.eventMgr.AddCallback(schema.Game, "Comma", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
+	game.eventMgr.AddCallback(schema.Game, "Dot", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
+	game.eventMgr.AddCallback(schema.Game, "KeyZDown", func(ed *event.EventDetail) { game.InitMissile() })
+	game.eventMgr.AddCallback(schema.Game, "KeyZUp", func(ed *event.EventDetail) { game.FireMissile() })
 }
 
 func (game *StateGame) Deactivate() {
@@ -131,9 +137,11 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowDown")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
-	game.eventMgr.RemoveCallback(schema.Game, "ArrowUp")
-	game.eventMgr.RemoveCallback(schema.Game, "ArrowDown")
 	game.eventMgr.RemoveCallback(schema.Game, "KeyN")
+	game.eventMgr.RemoveCallback(schema.Game, "Comma")
+	game.eventMgr.RemoveCallback(schema.Game, "Dot")
+	game.eventMgr.RemoveCallback(schema.Game, "KeyZDown")
+	game.eventMgr.RemoveCallback(schema.Game, "KeyZUp")
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
@@ -149,6 +157,10 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		game.playerTeams[i].UpdateTeam(elapsed)
 	}
 	game.camera.Update(elapsed)
+
+	if game.isFiring {
+		game.currentMissle.Update(elapsed)
+	}
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
@@ -160,6 +172,10 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	}
 
 	// game.camera.Render(screen)
+
+	if game.isFiring {
+		game.currentMissle.Render(screen)
+	}
 }
 
 func (game *StateGame) IsTransparent() bool {
@@ -193,4 +209,13 @@ func (game *StateGame) NextPlayer() {
 	game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
+}
+
+func (game *StateGame) InitMissile() {
+	game.isFiring = true
+	game.currentMissle = createMissile(5, 5)
+}
+
+func (game *StateGame) FireMissile() {
+	game.currentMissle.Fire()
 }

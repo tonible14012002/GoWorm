@@ -3,21 +3,21 @@
 ## TASKs
 
 - [ ] Create Color Map (1 sp)
-- [ ] Entity - terrain collision - (5sp)
-  - [ ] Update entity physic (1 sp)
-  - [ ] Handle bouncing (2 sp)
-- [ ] Create Camera controller (3 sp)
+- [x] Entity - terrain collision - (5sp)
+  - [x] Update entity physic (1 sp)
+  - [x] Handle bouncing (2 sp)
+- [x] Create Camera controller (3 sp)
   - Allow moving camera around map
-- [ ] Add Player Entity - (2 sp)
-  - [ ] Handle Collision with map
+- [x] Add Player Entity - (2 sp)
+  - [x] Handle Collision with map
   - [x] Controll crosshair
   - [ ] Fire Missle
   - [ ] Toggle display players name - button M
 - [ ] Create PlayerTeamManager
   - [ ] Allow get the next Player in turn
   - [ ] Get team health bar
-- [ ] Fire missle ( 4 sp)
 
+- [ ] Fire missle ( 4 sp)
   - [ ] Create Missle entity (1 sp)
   - [ ] Allow user fire missle ( init missle velo, pos) (1 sp)
   - [ ] Handle Boomb (2 sp)

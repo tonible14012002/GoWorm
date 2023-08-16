@@ -30,13 +30,12 @@ type PlayerEntity struct {
 	radius          int
 	animation       animation.Animation
 	crosshairSprite animation.Animation
-	variant         PlayerVariant
-	status          PlayerStatus
 	crosshairAngle  float64
 	isActive        bool
+	health          int
 }
 
-func (p *PlayerEntity) Setup(radius int, info ...common.Vectorf) *PlayerEntity {
+func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info ...common.Vectorf) *PlayerEntity {
 	// info = pos, vel, accel
 	p.radius = radius
 	p.isStable = false
@@ -55,8 +54,7 @@ func (p *PlayerEntity) Setup(radius int, info ...common.Vectorf) *PlayerEntity {
 	}
 
 	p.animation = animation.Animation{
-		Info:           PlayerSpriteInfos[p.variant][p.status],
-		PeriodDuration: 1,
+		Info: spriteInfo,
 	}
 	p.crosshairSprite = animation.Animation{
 		Info: animation.SpriteInfo{
@@ -69,6 +67,7 @@ func (p *PlayerEntity) Setup(radius int, info ...common.Vectorf) *PlayerEntity {
 	p.crosshairSprite.Setup()
 	p.animation.Setup()
 	p.animation.StartAnimation(animation.FOREVER)
+	p.health = 100
 
 	return p
 }
@@ -96,7 +95,7 @@ func (p *PlayerEntity) Update(elapsed time.Duration) {
 	p.animation.Update(elapsed)
 }
 
-func (p *PlayerEntity) GetFriction() float64 { return 0.3 }
+func (p *PlayerEntity) GetFriction() float64 { return 0.2 }
 
 func (p *PlayerEntity) RenderCrosshair(screen *ebiten.Image) {
 	if p.crosshairAngle > 2*math.Pi {

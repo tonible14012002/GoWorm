@@ -24,18 +24,30 @@ func createMissile(posX, posY float64) *Missile {
 	return (&Missile{}).Setup(common.Vectorf{X: posX, Y: posY})
 }
 
-func getMissileColor(value int) color.RGBA {
-	if value < bufferMax/5 {
+func getMissileColor(value float64) color.RGBA {
+	if value < maxEnergy/9 {
 		return color.RGBA{0xef, 0x62, 0x62, 0xff}
 	}
-	if value < bufferMax*2/5 {
-		return color.RGBA{0xf3, 0x99, 0x61, 0xff}
+	if value < maxEnergy*2/9 {
+		return color.RGBA{0xf0, 0x7c, 0x58, 0xff}
 	}
-	if value < bufferMax*3/5 {
-		return color.RGBA{0xf7, 0xd0, 0x60, 0xff}
+	if value < maxEnergy*3/9 {
+		return color.RGBA{0xf0, 0x96, 0x4f, 0xff}
 	}
-	if value < bufferMax*4/5 {
-		return color.RGBA{0x7c, 0xe8, 0x95, 0xff}
+	if value < maxEnergy*4/9 {
+		return color.RGBA{0xf1, 0xaf, 0x45, 0xff}
 	}
-	return color.RGBA{0x00, 0xff, 0xca, 0xff}
+	if value < maxEnergy*5/9 {
+		return color.RGBA{0xf1, 0xc9, 0x3b, 0xff}
+	}
+	if value < maxEnergy*6/9 {
+		return color.RGBA{0xb6, 0xd6, 0x55, 0xff}
+	}
+	if value < maxEnergy*7/9 {
+		return color.RGBA{0x7a, 0xe2, 0x6f, 0xff}
+	}
+	if value < maxEnergy*8/9 {
+		return color.RGBA{0x3f, 0xef, 0x88, 0xff}
+	}
+	return color.RGBA{0x03, 0xfb, 0xa2, 0xff}
 }

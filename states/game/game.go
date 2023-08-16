@@ -126,8 +126,8 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
 	game.eventMgr.AddCallback(schema.Game, "Comma", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
 	game.eventMgr.AddCallback(schema.Game, "Dot", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
-	game.eventMgr.AddCallback(schema.Game, "KeyZDown", func(ed *event.EventDetail) { game.InitMissile() })
-	game.eventMgr.AddCallback(schema.Game, "KeyZUp", func(ed *event.EventDetail) { game.FireMissile() })
+	game.eventMgr.AddCallback(schema.Game, "KeyXDown", func(ed *event.EventDetail) { game.InitMissile() })
+	game.eventMgr.AddCallback(schema.Game, "KeyXUp", func(ed *event.EventDetail) { game.FireMissile() })
 }
 
 func (game *StateGame) Deactivate() {
@@ -140,17 +140,21 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "KeyN")
 	game.eventMgr.RemoveCallback(schema.Game, "Comma")
 	game.eventMgr.RemoveCallback(schema.Game, "Dot")
-	game.eventMgr.RemoveCallback(schema.Game, "KeyZDown")
-	game.eventMgr.RemoveCallback(schema.Game, "KeyZUp")
+	game.eventMgr.RemoveCallback(schema.Game, "KeyXDown")
+	game.eventMgr.RemoveCallback(schema.Game, "KeyXUp")
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
 	toRemoveEntityIndices := game.world.UpdatePhysic(elapsed, game.entities)
+
 	remainEntities := make([]EntityHandler, 0, len(game.entities)-len(toRemoveEntityIndices))
 	for i := range game.entities {
 		if !slices.Contains(toRemoveEntityIndices, i) {
 			remainEntities = append(remainEntities, game.entities[i])
 		}
+	}
+	for i := range game.entities {
+		game.entities[i].Update(elapsed)
 	}
 	game.entities = remainEntities
 	for i := range game.playerTeams {
@@ -158,9 +162,6 @@ func (game *StateGame) Update(elapsed time.Duration) {
 	}
 	game.camera.Update(elapsed)
 
-	if game.isFiring {
-		game.currentMissle.Update(elapsed)
-	}
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
@@ -172,7 +173,6 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	}
 
 	// game.camera.Render(screen)
-
 	if game.isFiring {
 		game.currentMissle.Render(screen)
 	}
@@ -212,10 +212,12 @@ func (game *StateGame) NextPlayer() {
 }
 
 func (game *StateGame) InitMissile() {
-	game.isFiring = true
-	game.currentMissle = createMissile(5, 5)
+	game.currentPlayer.StartCharging()
 }
 
 func (game *StateGame) FireMissile() {
-	game.currentMissle.Fire()
+	game.currentPlayer.FireMissile()
+	missle := createMissile(game.currentPlayer.pos.X, game.currentPlayer.pos.Y)
+	missle.Fire(game.currentPlayer.crosshairAngle, game.currentPlayer.GetEnergyAmountPercent())
+	game.entities = append(game.entities, EntityHandler(missle))
 }

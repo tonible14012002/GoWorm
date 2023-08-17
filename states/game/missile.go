@@ -62,7 +62,7 @@ func (m *Missile) DoBouncing() {
 func (m *Missile) DoFalling() {}
 func (m *Missile) DoBomb()    {}
 func (m *Missile) ToBeRemove() bool {
-	return m.bounceBeforeDeath > 1
+	return m.bounceBeforeDeath >= 1
 }
 func (m *Missile) GetFriction() float64 { return 0.3 }
 
@@ -71,5 +71,5 @@ func (m *Missile) IsStable() bool { return true }
 func (m *Missile) SetStable(bool) {}
 
 func (m *Missile) IsExplosion() (bool, *common.Vectorf, int) {
-	return m.bounceBeforeDeath > 1, &m.pos, 0
+	return m.bounceBeforeDeath >= 1, &m.pos, 0
 }

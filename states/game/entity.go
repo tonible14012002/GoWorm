@@ -56,7 +56,7 @@ func (o *Object) Update(elapsed time.Duration) {
 
 }
 
-func (o *Object) GetFriction() float64 { return 0.7 }
+func (o *Object) GetFriction() float64 { return 0.5 }
 
 func (o *Object) Render(screen *ebiten.Image) {
 	posX := float32(o.pos.X)
@@ -64,7 +64,7 @@ func (o *Object) Render(screen *ebiten.Image) {
 	vector.DrawFilledCircle(screen, posX, posY, float32(o.radius), color.RGBA{0x27, 0x37, 0x4d, 0xff}, false)
 }
 func (o *Object) IsDeath() bool {
-	return o.boundBeforeDeath > 5
+	return o.boundBeforeDeath > 2
 }
 
 func (o *Object) ToBeRemove() bool {

@@ -33,7 +33,7 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	game.stateMgr = stateMgr
 	game.eventMgr = eventMgr
 	x, y := constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT
-	game.world = createWorld(x/4, y/4, 4, common.Vectorf{
+	game.world = createWorld(x/2, y/2, 2, common.Vectorf{
 		X: 0,
 		Y: 500,
 	})
@@ -56,7 +56,7 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 		team := &game.playerTeams[i]
 		for j := 0; j < game.teamMemCount; j++ {
 			var player *PlayerEntity
-			if i%game.teamCount == 0 {
+			if (i % game.teamCount) == 0 {
 				player = team.CreatePlayer(
 					PLAYER_DEFAULT_SIZE,
 					animation.SpriteInfo{
@@ -194,7 +194,7 @@ func (game *StateGame) Boom(pos common.Vectorf) {
 			X: math.Cos(game.randGen.Float64()*2*math.Pi) * 100,
 			Y: math.Sin(game.randGen.Float64()*2*math.Pi) * 100,
 		}
-		debrises[i] = EntityHandler(createObject(3, pos, debrisVelo))
+		debrises[i] = EntityHandler(createObject(2, pos, debrisVelo))
 	}
 	game.entities = append(game.entities, debrises...)
 }

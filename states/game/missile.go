@@ -14,7 +14,6 @@ type Missile struct {
 	pos               common.Vectorf
 	velo              common.Vectorf
 	accel             common.Vectorf
-	fireTimestamp     float64
 	bounceBeforeDeath int
 }
 
@@ -22,7 +21,7 @@ func (m *Missile) Setup(pos common.Vectorf) *Missile {
 	m.pos = pos
 	m.velo.X = 0
 	m.velo.Y = 0
-	m.fireTimestamp = 0
+
 	return m
 }
 
@@ -50,8 +49,8 @@ func (m *Missile) RenderMissile(screen *ebiten.Image) {
 func (m *Missile) Fire(angle float64, buffer float64) {
 	mag := buffer
 	m.velo = common.Vectorf{
-		X: mag * math.Cos(angle) * 500,
-		Y: mag * -math.Sin(angle) * 500,
+		X: mag * math.Cos(angle) * 800,
+		Y: mag * -math.Sin(angle) * 800,
 	}
 }
 func (m *Missile) IsDeath() bool {
@@ -63,10 +62,14 @@ func (m *Missile) DoBouncing() {
 func (m *Missile) DoFalling() {}
 func (m *Missile) DoBomb()    {}
 func (m *Missile) ToBeRemove() bool {
-	return m.bounceBeforeDeath >= 4
+	return m.bounceBeforeDeath > 1
 }
 func (m *Missile) GetFriction() float64 { return 0.3 }
 
 func (m *Missile) GetRadius() int { return 5 }
 func (m *Missile) IsStable() bool { return true }
 func (m *Missile) SetStable(bool) {}
+
+func (m *Missile) IsExplosion() (bool, *common.Vectorf, int) {
+	return m.bounceBeforeDeath > 1, &m.pos, 0
+}

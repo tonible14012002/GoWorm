@@ -98,10 +98,11 @@ func (w *WorldMap) Render(screen *ebiten.Image) {
 	}
 }
 
-func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) []int {
+func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int, []common.Vectorf) {
 	t := elapsed.Seconds()
 
 	toRemove := make([]int, 0, 10)
+	toBoomPos := make([]common.Vectorf, 0, 10)
 
 	for index, entity := range entities {
 		entity.SetStable(false)
@@ -173,6 +174,7 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) []int 
 			entity.SetVelo(potentialVelo)
 			entity.SetPosition(potentialPos)
 		}
+
 		finalVelo := entity.GetVelo()
 		veloMag := math.Sqrt(math.Pow(finalVelo.X, 2) + math.Pow(finalVelo.Y, 2))
 
@@ -182,6 +184,14 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) []int 
 		if entity.ToBeRemove() {
 			toRemove = append(toRemove, index)
 		}
+		if isExplosion, pos, radius := entity.IsExplosion(); isExplosion {
+			w.DoExplosion(*pos, uint(radius))
+			toBoomPos = append(toBoomPos, *pos)
+		}
 	}
-	return toRemove
+	return toRemove, toBoomPos
+}
+
+func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint) {
+	// TODO: Remove exploded world bit.
 }

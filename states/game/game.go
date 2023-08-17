@@ -27,8 +27,6 @@ type StateGame struct {
 	currentTeamId int
 	teamCount     int
 	teamMemCount  int
-	currentMissle *Missile
-	isFiring      bool
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -97,8 +95,6 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	game.currentTeamId = 0
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
-
-	game.isFiring = false
 }
 
 func (game *StateGame) OnDestroy() {
@@ -145,7 +141,7 @@ func (game *StateGame) Deactivate() {
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
-	toRemoveEntityIndices := game.world.UpdatePhysic(elapsed, game.entities)
+	toRemoveEntityIndices, boomPoss := game.world.UpdatePhysic(elapsed, game.entities)
 
 	remainEntities := make([]EntityHandler, 0, len(game.entities)-len(toRemoveEntityIndices))
 	for i := range game.entities {
@@ -153,15 +149,22 @@ func (game *StateGame) Update(elapsed time.Duration) {
 			remainEntities = append(remainEntities, game.entities[i])
 		}
 	}
-	for i := range game.entities {
-		game.entities[i].Update(elapsed)
-	}
 	game.entities = remainEntities
+
+	// UpdateTeam
 	for i := range game.playerTeams {
 		game.playerTeams[i].UpdateTeam(elapsed)
 	}
-	game.camera.Update(elapsed)
 
+	// Update Entity
+	for i := range game.entities {
+		game.entities[i].Update(elapsed)
+	}
+
+	for i := range boomPoss {
+		game.Boom(boomPoss[i])
+	}
+	// game.camera.Update(elapsed)
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
@@ -173,9 +176,7 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	}
 
 	// game.camera.Render(screen)
-	if game.isFiring {
-		game.currentMissle.Render(screen)
-	}
+	// }
 }
 
 func (game *StateGame) IsTransparent() bool {
@@ -186,14 +187,14 @@ func (game *StateGame) IsTranscendent() bool {
 	return false
 }
 
-func (game *StateGame) Boom(mousePos common.Vectorf) {
+func (game *StateGame) Boom(pos common.Vectorf) {
 	debrises := make([]EntityHandler, 20)
 	for i := range debrises {
 		debrisVelo := common.Vectorf{
 			X: math.Cos(game.randGen.Float64()*2*math.Pi) * 100,
 			Y: math.Sin(game.randGen.Float64()*2*math.Pi) * 100,
 		}
-		debrises[i] = EntityHandler(createObject(3, mousePos, debrisVelo))
+		debrises[i] = EntityHandler(createObject(3, pos, debrisVelo))
 	}
 	game.entities = append(game.entities, debrises...)
 }

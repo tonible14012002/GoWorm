@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/tonible14012002/go_game/engine/animation"
 	"github.com/tonible14012002/go_game/engine/common"
 	"github.com/tonible14012002/go_game/engine/constant"
 	"github.com/tonible14012002/go_game/engine/event"
@@ -22,13 +23,17 @@ type StateGame struct {
 	randGen       *rand.Rand
 	camera        Camera
 	currentPlayer *PlayerEntity
+	playerTeams   []PlayerTeam
+	currentTeamId int
+	teamCount     int
+	teamMemCount  int
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
 	game.stateMgr = stateMgr
 	game.eventMgr = eventMgr
 	x, y := constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT
-	game.world = createWorld(x/3, y/3, 3, common.Vectorf{
+	game.world = createWorld(x/4, y/4, 4, common.Vectorf{
 		X: 0,
 		Y: 500,
 	})
@@ -43,6 +48,53 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 		Cam:        ebiten.NewImage(constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT),
 	}
 	game.camera.SetCameraSpeed(300)
+
+	game.teamCount = 2
+	game.teamMemCount = 2
+	game.playerTeams = make([]PlayerTeam, game.teamCount)
+	for i := range game.playerTeams {
+		team := &game.playerTeams[i]
+		for j := 0; j < game.teamMemCount; j++ {
+			var player *PlayerEntity
+			if i%game.teamCount == 0 {
+				player = team.CreatePlayer(
+					PLAYER_DEFAULT_SIZE,
+					animation.SpriteInfo{
+						Src:            "assets/sprites/player/B_witch_charge.png",
+						RowCount:       5,
+						ColumnCount:    1,
+						TotalFrame:     5,
+						FrameDir:       animation.DOWN,
+						PeriodDuration: 1,
+					},
+					common.Vectorf{
+						X: (game.randGen.Float64())*float64(constant.SCREEN_WIDTH)*0.8 + 50,
+						Y: 0,
+					},
+				)
+			} else {
+				player = team.CreatePlayer(
+					PLAYER_DEFAULT_SIZE,
+					animation.SpriteInfo{
+						Src:            "assets/sprites/player/B_witch_idle.png",
+						RowCount:       6,
+						ColumnCount:    1,
+						TotalFrame:     6,
+						FrameDir:       animation.DOWN,
+						PeriodDuration: 1,
+					},
+					common.Vectorf{
+						X: (game.randGen.Float64()*0.8 + 0.2) * float64(constant.SCREEN_WIDTH),
+						Y: 0,
+					},
+				)
+			}
+			game.entities = append(game.entities, player)
+		}
+	}
+	game.currentTeamId = 0
+	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+	game.currentPlayer.SetIsActive(true)
 }
 
 func (game *StateGame) OnDestroy() {
@@ -52,7 +104,6 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ESC", func(ed *event.EventDetail) {
 		game.stateMgr.SwitchTo(schema.Intro)
 	})
-	game.eventMgr.AddCallback(schema.Game, "MouseLeftClick", game.AddEntityOnClick)
 	game.eventMgr.AddCallback(schema.Game, "CtrlMouseLeftClick", func(ed *event.EventDetail) {
 		game.Boom(common.Vectorf{X: float64(ed.MouseX), Y: float64(ed.MouseY)})
 	})
@@ -70,11 +121,11 @@ func (game *StateGame) Activate() {
 	})
 	game.eventMgr.AddCallback(schema.Game, "ArrowUp", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
 	game.eventMgr.AddCallback(schema.Game, "ArrowDown", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
+	game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
 }
 
 func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ESC")
-	game.eventMgr.RemoveCallback(schema.Game, "MouseLeftClick")
 	game.eventMgr.RemoveCallback(schema.Game, "CtrlMouseLeftClick")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowUp")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
@@ -82,6 +133,7 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
 	game.eventMgr.RemoveCallback(schema.Game, "ArrowUp")
 	game.eventMgr.RemoveCallback(schema.Game, "ArrowDown")
+	game.eventMgr.RemoveCallback(schema.Game, "KeyN")
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
@@ -93,16 +145,21 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		}
 	}
 	game.entities = remainEntities
+	for i := range game.playerTeams {
+		game.playerTeams[i].UpdateTeam(elapsed)
+	}
 	game.camera.Update(elapsed)
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
-	game.world.Render(game.camera.Cam)
+	// game.world.Render(game.camera.Cam)
+	game.world.Render(screen)
 	for _, entity := range game.entities {
-		entity.Render(game.camera.Cam)
+		// entity.Render(game.camera.Cam)
+		entity.Render(screen)
 	}
 
-	game.camera.Render(screen)
+	// game.camera.Render(screen)
 }
 
 func (game *StateGame) IsTransparent() bool {
@@ -111,22 +168,6 @@ func (game *StateGame) IsTransparent() bool {
 
 func (game *StateGame) IsTranscendent() bool {
 	return false
-}
-
-func (game *StateGame) AddEntityOnClick(detail *event.EventDetail) {
-	mousePos := common.Vectorf{
-		X: float64(detail.MouseX),
-		Y: float64(detail.MouseY),
-	}
-
-	if game.currentPlayer != nil {
-		game.currentPlayer.SetIsActive(false)
-	}
-
-	game.currentPlayer = createPlayer(10, mousePos)
-	newObject := EntityHandler(game.currentPlayer)
-	game.currentPlayer.SetIsActive(true)
-	game.entities = append(game.entities, newObject)
 }
 
 func (game *StateGame) Boom(mousePos common.Vectorf) {
@@ -145,4 +186,11 @@ func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 	if game.currentPlayer != nil {
 		game.currentPlayer.SetMovingDirection(direction)
 	}
+}
+
+func (game *StateGame) NextPlayer() {
+	game.currentPlayer.SetIsActive(false)
+	game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
+	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+	game.currentPlayer.SetIsActive(true)
 }

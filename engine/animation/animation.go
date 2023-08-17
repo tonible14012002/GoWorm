@@ -24,27 +24,27 @@ const (
 )
 
 type SpriteInfo struct {
-	Src         string
-	TotalFrame  int
-	ColumnCount int
-	RowCount    int
-	FrameDir    FrameDirection
+	Src            string
+	TotalFrame     int
+	ColumnCount    int
+	RowCount       int
+	FrameDir       FrameDirection
+	PeriodDuration float64
 }
 
 type Animation struct {
-	Info           SpriteInfo
-	size           common.Vector
-	currentFrame   int
-	speed          float64 // frames per second
-	clock          time.Duration
-	subImgPos      common.Vector
-	subImgSize     common.Vector
-	img            *ebiten.Image
-	PeriodDuration float64
-	enable         bool
-	aType          AnimationType
-	loopCount      int
-	maxLoopCount   int
+	Info         SpriteInfo
+	size         common.Vector
+	currentFrame int
+	speed        float64 // frames per second
+	clock        time.Duration
+	subImgPos    common.Vector
+	subImgSize   common.Vector
+	img          *ebiten.Image
+	enable       bool
+	aType        AnimationType
+	loopCount    int
+	maxLoopCount int
 }
 
 func (a *Animation) GetSpriteSize() common.Vector {
@@ -90,7 +90,7 @@ func (a *Animation) Setup() {
 		X: a.size.X / a.Info.ColumnCount,
 		Y: a.size.Y / a.Info.RowCount,
 	}
-	a.speed = float64(a.Info.TotalFrame) / a.PeriodDuration
+	a.speed = float64(a.Info.TotalFrame) / a.Info.PeriodDuration
 }
 
 func (a *Animation) UpdateInfo(info SpriteInfo) {

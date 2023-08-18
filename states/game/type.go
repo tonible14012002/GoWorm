@@ -27,7 +27,7 @@ type EntityHandler interface {
 	DoFalling()
 	DoBomb()
 	ToBeRemove() bool
-	IsExplosion() (bool, *common.Vectorf, int)
+	IsExplosion() (bool, *common.Vectorf, int, float64)
 }
 
 type Entities []EntityHandler

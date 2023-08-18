@@ -15,12 +15,14 @@ type Missile struct {
 	velo              common.Vectorf
 	accel             common.Vectorf
 	bounceBeforeDeath int
+	maxDamage         float64
 }
 
 func (m *Missile) Setup(pos common.Vectorf) *Missile {
 	m.pos = pos
 	m.velo.X = 0
 	m.velo.Y = 0
+	m.maxDamage = 60
 
 	return m
 }
@@ -70,6 +72,6 @@ func (m *Missile) GetRadius() int { return 5 }
 func (m *Missile) IsStable() bool { return true }
 func (m *Missile) SetStable(bool) {}
 
-func (m *Missile) IsExplosion() (bool, *common.Vectorf, int) {
-	return m.bounceBeforeDeath >= 1, &m.pos, m.GetRadius()
+func (m *Missile) IsExplosion() (bool, *common.Vectorf, int, float64) {
+	return m.bounceBeforeDeath >= 1, &m.pos, 20, m.maxDamage
 }

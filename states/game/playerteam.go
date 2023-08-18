@@ -43,9 +43,7 @@ func (t *PlayerTeam) GetAllPlayers() []*PlayerEntity {
 }
 
 func (t *PlayerTeam) UpdateTeam(elapsed time.Duration) {
-	for i := range t.players {
-		t.players[i].Update(elapsed)
-	}
+	//
 }
 
 func (t *PlayerTeam) RenderTeam(screen *ebiten.Image) {

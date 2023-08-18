@@ -76,6 +76,6 @@ func (o *Object) DoBouncing() {
 }
 func (o *Object) DoFalling() {}
 func (o *Object) DoBomb()    {}
-func (o *Object) IsExplosion() (bool, *common.Vectorf, int) {
-	return false, nil, 0
+func (o *Object) IsExplosion() (bool, *common.Vectorf, int, float64) {
+	return false, nil, 0, 0
 }

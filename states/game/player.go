@@ -200,6 +200,6 @@ func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {
 	}
 }
 
-func (p *PlayerEntity) IsExplosion() (bool, *common.Vectorf, int) {
-	return false, nil, 0
+func (p *PlayerEntity) IsExplosion() (bool, *common.Vectorf, int, float64) {
+	return false, nil, 0, 0
 }

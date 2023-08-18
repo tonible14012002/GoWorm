@@ -193,5 +193,28 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 }
 
 func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint) {
-	// TODO: Remove exploded world bit.
+	originX := int(pos.X) / w.graphicSize
+	originY := int(pos.Y) / w.graphicSize
+
+	explosionRadius := radius * 4
+
+	minX := originX - int(explosionRadius)
+	maxX := originX + int(explosionRadius)
+	minY := originY - int(explosionRadius)
+	maxY := originY + int(explosionRadius)
+
+	for y := minY; y <= maxY; y++ {
+		for x := minX; x <= maxX; x++ {
+			if w.IsInsideCircle(x, y, float64(originX), float64(originY), explosionRadius) {
+				if y > 0 && y < len(w.world) && x > 0 && x < len(w.world[0]) {
+					w.world[y][x] = false
+				}
+			}
+		}
+	}
+}
+
+func (w *WorldMap) IsInsideCircle(x, y int, posX, posY float64, radius uint) bool {
+	distanceSquared := math.Pow((float64(x)-posX), 2) + math.Pow((float64(y)-posY), 2)
+	return distanceSquared <= math.Pow(float64(radius), 2)
 }

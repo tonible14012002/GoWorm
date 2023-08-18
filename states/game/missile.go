@@ -49,8 +49,8 @@ func (m *Missile) RenderMissile(screen *ebiten.Image) {
 func (m *Missile) Fire(angle float64, buffer float64) {
 	mag := buffer
 	m.velo = common.Vectorf{
-		X: mag * math.Cos(angle) * 800,
-		Y: mag * -math.Sin(angle) * 800,
+		X: mag * math.Cos(angle) * 700,
+		Y: mag * -math.Sin(angle) * 700,
 	}
 }
 func (m *Missile) IsDeath() bool {
@@ -71,5 +71,5 @@ func (m *Missile) IsStable() bool { return true }
 func (m *Missile) SetStable(bool) {}
 
 func (m *Missile) IsExplosion() (bool, *common.Vectorf, int) {
-	return m.bounceBeforeDeath >= 1, &m.pos, 0
+	return m.bounceBeforeDeath >= 1, &m.pos, m.GetRadius()
 }

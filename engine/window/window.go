@@ -10,6 +10,7 @@ import (
 	"github.com/tonible14012002/go_game/engine/state"
 	"github.com/tonible14012002/go_game/states/game"
 	"github.com/tonible14012002/go_game/states/intro"
+	"github.com/tonible14012002/go_game/states/menu"
 )
 
 type Window struct {
@@ -41,9 +42,13 @@ func (window *Window) Setup(title string, size common.Vector) {
 	window.stateMgr.RegisterState(schema.Intro, func() state.BaseState {
 		return &intro.StateIntro{}
 	})
-
+	// Game State
 	window.stateMgr.RegisterState(schema.Game, func() state.BaseState {
 		return &game.StateGame{}
+	})
+	// Menu State
+	window.stateMgr.RegisterState(schema.Menu, func() state.BaseState {
+		return &menu.StateMenu{}
 	})
 	window.stateMgr.SwitchTo(schema.Intro)
 }

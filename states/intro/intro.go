@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text"
@@ -12,6 +13,7 @@ import (
 	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
 	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/opentype"
 )
 
@@ -49,6 +51,11 @@ func (intro *StateIntro) OnCreate(stateMgr *state.StateManager, eventMgr *event.
 		log.Fatal(ttErr)
 	}
 
+	ttRegular, errRegular := truetype.Parse(gobold.TTF)
+	if errRegular != nil {
+		log.Fatal(errRegular)
+	}
+
 	nameMplusNormalFont, nameFontFaceErr := opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    48,
 		DPI:     72,
@@ -58,14 +65,11 @@ func (intro *StateIntro) OnCreate(stateMgr *state.StateManager, eventMgr *event.
 		log.Fatal(nameFontFaceErr)
 	}
 
-	messageMplusNormalFont, messageFontFaceErr := opentype.NewFace(tt, &opentype.FaceOptions{
-		Size:    20,
+	messageMplusNormalFont := truetype.NewFace(ttRegular, &truetype.Options{
+		Size:    24,
 		DPI:     72,
-		Hinting: font.HintingVertical,
+		Hinting: font.Hinting(font.WeightLight),
 	})
-	if messageFontFaceErr != nil {
-		log.Fatal(messageFontFaceErr)
-	}
 
 	intro.fontFaces[NAME] = nameMplusNormalFont
 	intro.fontFaces[MESSAGE] = messageMplusNormalFont
@@ -103,6 +107,7 @@ func (intro *StateIntro) Update(elapsed time.Duration) {
 func (intro *StateIntro) Render(screen *ebiten.Image) {
 	_, y := ebiten.WindowSize()
 
+	text.Draw(screen, intro.contents[NAME], intro.fontFaces[NAME], int(intro.posXs[NAME])-3, int(intro.posYs[NAME]), color.RGBA{0xc4, 0xdd, 0xff, 0xff})
 	text.Draw(screen, intro.contents[NAME], intro.fontFaces[NAME], int(intro.posXs[NAME]), int(intro.posYs[NAME]), color.RGBA{0x65, 0x28, 0xf7, 0xff})
 
 	if intro.posYs[NAME] > float64(y)/2 {

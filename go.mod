@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/KEINOS/go-noise v0.1.0-rc1
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.5.6
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 	golang.org/x/image v0.6.0

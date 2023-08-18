@@ -104,6 +104,9 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ESC", func(ed *event.EventDetail) {
 		game.stateMgr.SwitchTo(schema.Intro)
 	})
+	game.eventMgr.AddCallback(schema.Game, "SPACE", func(ed *event.EventDetail) {
+		game.stateMgr.SwitchTo(schema.Menu)
+	})
 	game.eventMgr.AddCallback(schema.Game, "CtrlMouseLeftClick", func(ed *event.EventDetail) {
 		game.Boom(common.Vectorf{X: float64(ed.MouseX), Y: float64(ed.MouseY)})
 	})
@@ -128,6 +131,7 @@ func (game *StateGame) Activate() {
 
 func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ESC")
+	game.eventMgr.RemoveCallback(schema.Game, "SPACE")
 	game.eventMgr.RemoveCallback(schema.Game, "CtrlMouseLeftClick")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowUp")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")

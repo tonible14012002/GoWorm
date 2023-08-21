@@ -13,12 +13,13 @@ import (
 type MovingDirection int
 
 const (
-	Up MovingDirection = iota
+	None MovingDirection = iota
+	Up
 	Down
 )
 
-var (
-	crosshairAngleStep float64 = 0.05
+const (
+	crosshairAngleVelo float64 = 4
 	crosshairRadius    float64 = 35
 	crosshairScale     float64 = 0.3
 
@@ -27,18 +28,19 @@ var (
 )
 
 type PlayerEntity struct {
-	pos             common.Vectorf
-	velo            common.Vectorf
-	accel           common.Vectorf
-	isStable        bool
-	radius          int
-	animation       animation.Animation
-	crosshairSprite animation.Animation
-	crosshairAngle  float64
-	isActive        bool
-	health          int
-	energy          float64
-	isCharing       bool
+	pos                common.Vectorf
+	velo               common.Vectorf
+	accel              common.Vectorf
+	isStable           bool
+	radius             int
+	animation          animation.Animation
+	crosshairSprite    animation.Animation
+	crosshairAngle     float64
+	isActive           bool
+	health             int
+	energy             float64
+	isCharing          bool
+	crossHairDirection MovingDirection
 }
 
 func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info ...common.Vectorf) *PlayerEntity {
@@ -46,6 +48,7 @@ func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info .
 	p.radius = radius
 	p.isStable = false
 	p.crosshairAngle = 0
+	p.crossHairDirection = None
 
 	switch len(info) {
 	case 1:
@@ -123,6 +126,18 @@ func (p *PlayerEntity) Update(elapsed time.Duration) {
 	if p.energy > maxChargingTime {
 		p.energy = maxChargingTime
 	}
+
+	switch p.crossHairDirection {
+	case Up:
+		{
+			p.crosshairAngle += elapsed.Seconds() * crosshairAngleVelo
+		}
+	case Down:
+		{
+			p.crosshairAngle -= elapsed.Seconds() * crosshairAngleVelo
+		}
+	}
+	p.crossHairDirection = None
 }
 
 func (p *PlayerEntity) GetFriction() float64 { return 0.2 }
@@ -176,13 +191,9 @@ func (p *PlayerEntity) ToBeRemove() bool {
 func (p *PlayerEntity) SetIsActive(active bool) {
 	p.isActive = active
 }
+
 func (p *PlayerEntity) SetMovingDirection(movingDirection MovingDirection) {
-	switch movingDirection {
-	case Up:
-		p.crosshairAngle += crosshairAngleStep
-	case Down:
-		p.crosshairAngle -= crosshairAngleStep
-	}
+	p.crossHairDirection = movingDirection
 }
 
 func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {

@@ -35,7 +35,7 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	x, y := constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT
 	game.world = createWorld(x/2, y/2, 2, common.Vectorf{
 		X: 0,
-		Y: 500,
+		Y: 5,
 	})
 
 	seed := time.Now().Second()
@@ -49,8 +49,8 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	}
 	game.camera.SetCameraSpeed(300)
 
-	game.teamCount = 2
-	game.teamMemCount = 2
+	game.teamCount = 1
+	game.teamMemCount = 1
 	game.playerTeams = make([]PlayerTeam, game.teamCount)
 	for i := range game.playerTeams {
 		team := &game.playerTeams[i]
@@ -145,15 +145,23 @@ func (game *StateGame) Deactivate() {
 }
 
 func (game *StateGame) Update(elapsed time.Duration) {
-	toRemoveEntityIndices, boomPoss := game.world.UpdatePhysic(elapsed, game.entities)
+	// recalculate 10 times for correctiveness.
+	for i := 0; i < 10; i++ {
+		toRemoveEntityIndices, boomPoss := game.world.UpdatePhysic(elapsed, game.entities)
 
-	remainEntities := make([]EntityHandler, 0, len(game.entities)-len(toRemoveEntityIndices))
-	for i := range game.entities {
-		if !slices.Contains(toRemoveEntityIndices, i) {
-			remainEntities = append(remainEntities, game.entities[i])
+		remainEntities := make([]EntityHandler, 0, len(game.entities)-len(toRemoveEntityIndices))
+		for i := range game.entities {
+			if !slices.Contains(toRemoveEntityIndices, i) {
+				remainEntities = append(remainEntities, game.entities[i])
+			}
+		}
+
+		game.entities = remainEntities
+
+		for i := range boomPoss {
+			game.Boom(boomPoss[i])
 		}
 	}
-	game.entities = remainEntities
 
 	// UpdateTeam
 	for i := range game.playerTeams {
@@ -165,9 +173,6 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		game.entities[i].Update(elapsed)
 	}
 
-	for i := range boomPoss {
-		game.Boom(boomPoss[i])
-	}
 	// game.camera.Update(elapsed)
 }
 
@@ -195,8 +200,8 @@ func (game *StateGame) Boom(pos common.Vectorf) {
 	debrises := make([]EntityHandler, 20)
 	for i := range debrises {
 		debrisVelo := common.Vectorf{
-			X: math.Cos(game.randGen.Float64()*2*math.Pi) * 100,
-			Y: math.Sin(game.randGen.Float64()*2*math.Pi) * 100,
+			X: math.Cos(game.randGen.Float64()*2*math.Pi) * 20,
+			Y: math.Sin(game.randGen.Float64()*2*math.Pi) * 20,
 		}
 		debrises[i] = EntityHandler(createObject(2, pos, debrisVelo))
 	}

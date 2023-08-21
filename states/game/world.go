@@ -21,7 +21,6 @@ type WorldMap struct {
 	graphicSize  int // actual pixel size of one block
 	gravityAccel common.Vectorf
 	randGen      *rand.Rand
-	maxShockWave float64
 }
 
 func (w *WorldMap) Setup(width, height, graphicSize int, gravityAccel common.Vectorf) *WorldMap {
@@ -32,7 +31,6 @@ func (w *WorldMap) Setup(width, height, graphicSize int, gravityAccel common.Vec
 	if width == 0 || height == 0 || graphicSize == 0 {
 		log.Fatal("width, height, graphic size must larger than zero")
 	}
-	w.maxShockWave = 150
 	w.gravityAccel = gravityAccel
 	w.width = width
 	w.height = height
@@ -220,25 +218,12 @@ func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint, entities Entitie
 	for _, entity := range entities {
 		entityPos := entity.GetPosition()
 		distanceVector := entityPos.Minus(pos)
-		distance := math.Sqrt(math.Pow(distanceVector.X, 2) + math.Sqrt(math.Pow(distanceVector.Y, 2)))
-		if distance == 0 {
-			distance = 0.1
+		distance := math.Sqrt(distanceVector.X*distanceVector.X + distanceVector.Y*distanceVector.Y)
+		if distance < 0.0001 {
+			distance = 0.0001
 		}
-		if distanceVector.X == 0 && distanceVector.Y == 0 {
-			// cannot determine shocwave velo
-			distanceVector = common.Vectorf{X: 0.1, Y: 0.1}
-		}
-		if isEsplode, _, _, _ := entity.IsExplosion(); distance <= float64(radius) && !isEsplode {
-
-			// TODO: Handle Set Health entitie
-			// damage := maxDamage * (1 - (distance / float64(radius)))
-			normalizeDistance := distanceVector.Multi((1 / distance))
-			// fmt.Println("bom pos", pos, "entityPos", entityPos)
-			// fmt.Println("vector distance", distanceVector)
-			// fmt.Println("distance", distance)
-			// fmt.Println("radius", radius)
-			shockWaveMag := w.maxShockWave * (1 - (distance / float64(radius)))
-			entity.SetVelo(normalizeDistance.Multi(shockWaveMag))
+		if distance < float64(radius) {
+			entity.SetVelo(distanceVector.Multi(float64(radius) / distance).Multi(0.7))
 			entity.DoBomb()
 		}
 		fmt.Println()

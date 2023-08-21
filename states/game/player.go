@@ -25,10 +25,11 @@ const (
 	crosshairRadius    float64 = 35
 	crosshairScale     float64 = 0.3
 
-	maxEnergy       float64 = 40
-	maxChargingTime float64 = 2
-	maxHealth       float64 = 200
-	maxDamage       float64 = 60
+	maxEnergy         float64 = 40
+	maxChargingTime   float64 = 2
+	maxHealth         float64 = 200
+	healthRenderScale float64 = 4
+	maxDamage         float64 = 60
 )
 
 type PlayerEntity struct {
@@ -215,16 +216,16 @@ func (p *PlayerEntity) SetMovingDirection(movingDirection MovingDirection) {
 }
 
 func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {
-	posX := float32(p.pos.X) - float32(maxEnergy)/2
-	posY := float32(p.pos.Y) - float32(p.animation.GetSpriteSize().Y)/2 - 20
+	posX := float32(p.pos.X) - float32(p.animation.GetSpriteSize().X)/2 - 20
+	posY := float32(p.pos.Y) + float32(maxEnergy)/2
 
 	for i := 0; i <= int(maxEnergy)+1; i++ {
 		if i < int(p.GetEnergyAmountCharged())+1 || i == 0 || i == int(maxEnergy)+1 {
-			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 7, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX, posY-float32(i), 7, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
 
 		} else {
-			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
-			vector.DrawFilledRect(screen, posX+float32(i), posY+6, 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX, posY-float32(i), 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX+6, posY-float32(i), 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
 		}
 	}
 }
@@ -234,16 +235,16 @@ func (p *PlayerEntity) IsExplosion() (bool, *common.Vectorf, int, float64) {
 }
 
 func (p *PlayerEntity) RenderHealth(screen *ebiten.Image) {
-	posX := float32(p.pos.X) - float32(maxHealth/2)/2
-	posY := float32(p.pos.Y) + float32(p.animation.GetSpriteSize().Y)/2 + 10
+	posX := float32(p.pos.X) - float32(maxHealth/healthRenderScale)/2
+	posY := float32(p.pos.Y) - float32(p.animation.GetSpriteSize().Y)/2 - 20
 
-	for i := 0; i <= int(maxHealth/2)+1; i++ {
-		if i < int(p.health/2)+1 || i == 0 || i == int(maxHealth/2)+1 {
-			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 4, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+	for i := 0; i <= int(maxHealth/healthRenderScale)+1; i++ {
+		if i < int(p.health/healthRenderScale)+1 || i == 0 || i == int(maxHealth/healthRenderScale)+1 {
+			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 5, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
 
 		} else {
 			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
-			vector.DrawFilledRect(screen, posX+float32(i), posY+3, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+			vector.DrawFilledRect(screen, posX+float32(i), posY+4, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
 		}
 	}
 }

@@ -62,8 +62,8 @@ func (m *Missile) IsDeath() bool {
 func (m *Missile) DoBouncing() {
 	m.bounceBeforeDeath++
 }
-func (m *Missile) DoFalling()                {}
-func (m *Missile) DoBomb(int, int, int, int) {}
+func (m *Missile) DoFalling()   {}
+func (m *Missile) DoBomb([]int) {}
 func (m *Missile) ToBeRemove() bool {
 	return m.bounceBeforeDeath >= 1
 }

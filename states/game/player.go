@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 	"time"
@@ -191,14 +190,18 @@ func (p *PlayerEntity) IsDeath() bool {
 }
 func (p *PlayerEntity) DoBouncing() {}
 func (p *PlayerEntity) DoFalling()  {}
-func (p *PlayerEntity) DoBomb(originX, originY, radius, graphicSize int) {
+func (p *PlayerEntity) DoBomb(intArray []int) {
+	originX := intArray[0]
+	originY := intArray[1]
+	radius := intArray[2]
+	graphicSize := intArray[3]
+
 	scaledOriginX := int(originX) / graphicSize
 	scaledOriginY := int(originY) / graphicSize
 	scaledPlayerX := int(p.pos.X) / graphicSize
 	scaledPlayerY := int(p.pos.Y) / graphicSize
 
 	distanceSquared := math.Pow((float64(scaledPlayerX)-float64(scaledOriginX)), 2) + math.Pow((float64(scaledPlayerY)-float64(scaledOriginY)), 2)
-	fmt.Println(float64(scaledPlayerX)-float64(scaledOriginX), float64(scaledPlayerY)-float64(scaledOriginY), distanceSquared, radius)
 
 	if distanceSquared <= math.Pow(float64(radius), 2) {
 		p.health = p.health - (1-distanceSquared/math.Pow(float64(radius), 2))*maxDamage

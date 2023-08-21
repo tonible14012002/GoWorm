@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"math"
@@ -156,7 +157,7 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 		}
 
 		if isCollision {
-			// DO BOUNCING BEFORE SET NEW VELO, POS (do Animation..., etc)
+			// NOTE: Entity Collide with terrain
 			entity.SetStable(false)
 			respMag := math.Sqrt(math.Pow(responseVelo.X, 2) + math.Pow(responseVelo.Y, 2))
 			normalizeResp := common.Vectorf{
@@ -167,9 +168,10 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 			entity.SetVelo(
 				(potentialVelo.Minus(normalizeResp.Multi(2 * dot))).Multi(entity.GetFriction()),
 			)
+			// NOTE: Entity handle bouncing animation
 			entity.DoBouncing()
 		} else {
-			// DO FALLING
+			// NOTE: Entity Falling
 			entity.DoFalling()
 			entity.SetVelo(potentialVelo)
 			entity.SetPosition(potentialPos)
@@ -181,36 +183,50 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 		if veloMag < 0.1 {
 			entity.SetStable(true)
 		}
+		// NOTE: Entity will disappear
 		if entity.ToBeRemove() {
 			toRemove = append(toRemove, index)
 		}
-		if isExplosion, pos, radius := entity.IsExplosion(); isExplosion {
-			w.DoExplosion(*pos, uint(radius))
+		// NOTE: Entity will explode
+		if isExplosion, pos, radius, maxDamage := entity.IsExplosion(); isExplosion {
+			w.DoExplosion(*pos, uint(radius), entities, maxDamage)
 			toBoomPos = append(toBoomPos, *pos)
 		}
 	}
 	return toRemove, toBoomPos
 }
 
-func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint) {
+func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint, entities Entities, maxDamage float64) {
 	originX := int(pos.X) / w.graphicSize
 	originY := int(pos.Y) / w.graphicSize
 
-	explosionRadius := radius * 4
-
-	minX := originX - int(explosionRadius)
-	maxX := originX + int(explosionRadius)
-	minY := originY - int(explosionRadius)
-	maxY := originY + int(explosionRadius)
+	minX := originX - int(radius)
+	maxX := originX + int(radius)
+	minY := originY - int(radius)
+	maxY := originY + int(radius)
 
 	for y := minY; y <= maxY; y++ {
 		for x := minX; x <= maxX; x++ {
-			if w.IsInsideCircle(x, y, float64(originX), float64(originY), explosionRadius) {
+			if w.IsInsideCircle(x, y, float64(originX), float64(originY), radius) {
 				if y > 0 && y < len(w.world) && x > 0 && x < len(w.world[0]) {
 					w.world[y][x] = false
 				}
 			}
 		}
+	}
+
+	for _, entity := range entities {
+		entityPos := entity.GetPosition()
+		distanceVector := entityPos.Minus(pos)
+		distance := math.Sqrt(distanceVector.X*distanceVector.X + distanceVector.Y*distanceVector.Y)
+		if distance < 0.0001 {
+			distance = 0.0001
+		}
+		if distance < float64(radius) {
+			entity.SetVelo(distanceVector.Multi(float64(radius) / distance).Multi(0.7))
+			entity.DoBomb()
+		}
+		fmt.Println()
 	}
 }
 

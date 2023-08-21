@@ -9,7 +9,7 @@ import (
 	"github.com/tonible14012002/go_game/engine/common"
 )
 
-const PLAYER_DEFAULT_SIZE = 10
+const PLAYER_DEFAULT_SIZE = 20
 
 type PlayerTeam struct {
 	players        []*PlayerEntity
@@ -43,9 +43,7 @@ func (t *PlayerTeam) GetAllPlayers() []*PlayerEntity {
 }
 
 func (t *PlayerTeam) UpdateTeam(elapsed time.Duration) {
-	for i := range t.players {
-		t.players[i].Update(elapsed)
-	}
+	//
 }
 
 func (t *PlayerTeam) RenderTeam(screen *ebiten.Image) {

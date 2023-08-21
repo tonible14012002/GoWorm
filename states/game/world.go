@@ -188,13 +188,7 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 			toRemove = append(toRemove, index)
 		}
 		if isExplosion, pos, radius, maxDamage := entity.IsExplosion(); isExplosion {
-			// toExplodePos := *pos
 			w.DoExplosion(*pos, uint(radius), entities, maxDamage)
-
-			// for _, en := range entities {
-			// 	en.DoBomb([]int{int(toExplodePos.X), int(toExplodePos.Y), radius * 4, w.graphicSize})
-			// }
-
 			toBoomPos = append(toBoomPos, *pos)
 		}
 	}

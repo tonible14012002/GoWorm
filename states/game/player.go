@@ -1,6 +1,8 @@
 package game
 
 import (
+	"fmt"
+	"image/color"
 	"math"
 	"time"
 
@@ -25,6 +27,8 @@ const (
 
 	maxEnergy       float64 = 40
 	maxChargingTime float64 = 2
+	maxHealth       float64 = 200
+	maxDamage       float64 = 60
 )
 
 type PlayerEntity struct {
@@ -37,7 +41,7 @@ type PlayerEntity struct {
 	crosshairSprite    animation.Animation
 	crosshairAngle     float64
 	isActive           bool
-	health             int
+	health             float64
 	energy             float64
 	isCharing          bool
 	crossHairDirection MovingDirection
@@ -49,6 +53,7 @@ func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info .
 	p.isStable = false
 	p.crosshairAngle = 0
 	p.crossHairDirection = None
+	p.health = maxHealth
 
 	switch len(info) {
 	case 1:
@@ -76,7 +81,6 @@ func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info .
 	p.crosshairSprite.Setup()
 	p.animation.Setup()
 	p.animation.StartAnimation(animation.FOREVER)
-	p.health = 100
 	p.isCharing = false
 	return p
 }
@@ -171,6 +175,8 @@ func (p *PlayerEntity) Render(screen *ebiten.Image) {
 	op.GeoM.Translate(p.pos.X-float64(spriteSize.X)/2, p.pos.Y-float64(spriteSize.Y)/2)
 	p.animation.Render(screen, op)
 
+	p.RenderHealth(screen)
+
 	if p.isActive {
 		p.RenderCrosshair(screen)
 	}
@@ -184,7 +190,19 @@ func (p *PlayerEntity) IsDeath() bool {
 }
 func (p *PlayerEntity) DoBouncing() {}
 func (p *PlayerEntity) DoFalling()  {}
-func (p *PlayerEntity) DoBomb()     {}
+func (p *PlayerEntity) DoBomb(originX, originY, radius, graphicSize int) {
+	scaledOriginX := int(originX) / graphicSize
+	scaledOriginY := int(originY) / graphicSize
+	scaledPlayerX := int(p.pos.X) / graphicSize
+	scaledPlayerY := int(p.pos.Y) / graphicSize
+
+	distanceSquared := math.Pow((float64(scaledPlayerX)-float64(scaledOriginX)), 2) + math.Pow((float64(scaledPlayerY)-float64(scaledOriginY)), 2)
+	fmt.Println(float64(scaledPlayerX)-float64(scaledOriginX), float64(scaledPlayerY)-float64(scaledOriginY), distanceSquared, radius)
+
+	if distanceSquared <= math.Pow(float64(radius), 2) {
+		p.health = p.health - (1-distanceSquared/math.Pow(float64(radius), 2))*maxDamage
+	}
+}
 func (p *PlayerEntity) ToBeRemove() bool {
 	return false
 }
@@ -213,4 +231,19 @@ func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {
 
 func (p *PlayerEntity) IsExplosion() (bool, *common.Vectorf, int, float64) {
 	return false, nil, 0, 0
+}
+
+func (p *PlayerEntity) RenderHealth(screen *ebiten.Image) {
+	posX := float32(p.pos.X) - float32(maxHealth/2)/2
+	posY := float32(p.pos.Y) + float32(p.animation.GetSpriteSize().Y)/2 + 10
+
+	for i := 0; i <= int(maxHealth/2)+1; i++ {
+		if i < int(p.health/2)+1 || i == 0 || i == int(maxHealth/2)+1 {
+			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 4, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+
+		} else {
+			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+			vector.DrawFilledRect(screen, posX+float32(i), posY+3, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+		}
+	}
 }

@@ -187,9 +187,14 @@ func (w *WorldMap) UpdatePhysic(elapsed time.Duration, entities Entities) ([]int
 		if entity.ToBeRemove() {
 			toRemove = append(toRemove, index)
 		}
-		// NOTE: Entity will explode
 		if isExplosion, pos, radius, maxDamage := entity.IsExplosion(); isExplosion {
+			// toExplodePos := *pos
 			w.DoExplosion(*pos, uint(radius), entities, maxDamage)
+
+			// for _, en := range entities {
+			// 	en.DoBomb(int(toExplodePos.X), int(toExplodePos.Y), radius*4, w.graphicSize)
+			// }
+
 			toBoomPos = append(toBoomPos, *pos)
 		}
 	}
@@ -207,7 +212,7 @@ func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint, entities Entitie
 
 	for y := minY; y <= maxY; y++ {
 		for x := minX; x <= maxX; x++ {
-			if w.IsInsideCircle(x, y, float64(originX), float64(originY), radius) {
+			if IsInsideCircle(x, y, float64(originX), float64(originY), radius) {
 				if y > 0 && y < len(w.world) && x > 0 && x < len(w.world[0]) {
 					w.world[y][x] = false
 				}
@@ -224,13 +229,8 @@ func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint, entities Entitie
 		}
 		if distance < float64(radius) {
 			entity.SetVelo(distanceVector.Multi(float64(radius) / distance).Multi(0.7))
-			entity.DoBomb()
+			entity.DoBomb(int(pos.X), int(pos.Y), int(radius*4), w.graphicSize)
 		}
 		fmt.Println()
 	}
-}
-
-func (w *WorldMap) IsInsideCircle(x, y int, posX, posY float64, radius uint) bool {
-	distanceSquared := math.Pow((float64(x)-posX), 2) + math.Pow((float64(y)-posY), 2)
-	return distanceSquared <= math.Pow(float64(radius), 2)
 }

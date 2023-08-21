@@ -74,8 +74,9 @@ func (o *Object) ToBeRemove() bool {
 func (o *Object) DoBouncing() {
 	o.boundBeforeDeath++
 }
-func (o *Object) DoFalling() {}
-func (o *Object) DoBomb()    {}
+
+func (o *Object) DoFalling()                {}
+func (o *Object) DoBomb(int, int, int, int) {}
 func (o *Object) IsExplosion() (bool, *common.Vectorf, int, float64) {
 	return false, nil, 0, 0
 }

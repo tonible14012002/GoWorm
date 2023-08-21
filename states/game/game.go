@@ -49,8 +49,8 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	}
 	game.camera.SetCameraSpeed(300)
 
-	game.teamCount = 1
-	game.teamMemCount = 1
+	game.teamCount = 2
+	game.teamMemCount = 2
 	game.playerTeams = make([]PlayerTeam, game.teamCount)
 	for i := range game.playerTeams {
 		team := &game.playerTeams[i]

@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"math"
@@ -225,6 +224,5 @@ func (w *WorldMap) DoExplosion(pos common.Vectorf, radius uint, entities Entitie
 			entity.SetVelo(distanceVector.Multi(float64(radius) / distance).Multi(0.7))
 			entity.DoBomb([]int{int(pos.X), int(pos.Y), int(radius * 4), w.graphicSize})
 		}
-		fmt.Println()
 	}
 }

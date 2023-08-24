@@ -1,12 +1,15 @@
 package game
 
 import (
-	"fmt"
+	"image/color"
+	"log"
 	"math"
 	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/tonible14012002/go_game/engine/animation"
 	"github.com/tonible14012002/go_game/engine/common"
 	"github.com/tonible14012002/go_game/engine/constant"
@@ -14,27 +17,32 @@ import (
 	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
 	"golang.org/x/exp/slices"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 var (
-	teamCount    int = 2
-	teamMemCount int = 2
+	teamCount          int = 2
+	teamMemCount       int = 2
+	maxStableThreshold int = 300
 )
 
 type StateGame struct {
-	stateMgr      *state.StateManager
-	eventMgr      *event.EventManager
-	world         WorldMap
-	entities      Entities
-	randGen       *rand.Rand
-	camera        Camera
-	currentPlayer *PlayerEntity
-	playerTeams   []PlayerTeam
-	currentTeamId int
-	teamCount     int
-	teamMemCount  int
-	gamePlayState GamePlayState
-	isStable      bool
+	stateMgr        *state.StateManager
+	eventMgr        *event.EventManager
+	world           WorldMap
+	entities        Entities
+	randGen         *rand.Rand
+	camera          Camera
+	currentPlayer   *PlayerEntity
+	playerTeams     []PlayerTeam
+	currentTeamId   int
+	teamCount       int
+	teamMemCount    int
+	gamePlayState   GamePlayState
+	isStable        bool
+	stableThreshold int
+	isOver          bool
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -68,10 +76,10 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 				player = team.CreatePlayer(
 					PLAYER_DEFAULT_SIZE,
 					animation.SpriteInfo{
-						Src:            "assets/sprites/player/B_witch_charge.png",
-						RowCount:       5,
+						Src:            "assets/sprites/player/ChikBoy_idle.png",
+						RowCount:       6,
 						ColumnCount:    1,
-						TotalFrame:     5,
+						TotalFrame:     6,
 						FrameDir:       animation.DOWN,
 						PeriodDuration: 1,
 					},
@@ -190,19 +198,27 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		game.entities[i].Update(elapsed)
 	}
 
-	if !game.IsGameStable() || game.gamePlayState.state == FIRING {
+	if game.gamePlayState.state == FIRING || game.gamePlayState.state == EXPLODING {
+		game.stableThreshold += 1
+	}
+
+	// Update game play state
+	if (!game.IsGameStable() || game.gamePlayState.state == FIRING) && game.stableThreshold <= maxStableThreshold {
 		game.isStable = false
 	} else {
 		game.isStable = true
 	}
-
-	if game.gamePlayState.state == EXPLODING && game.isStable {
-		game.gamePlayState.state = STANDBY
-		game.NextPlayer()
+	if game.IsGameOver() {
+		game.isOver = true
+	} else {
+		if game.gamePlayState.state == EXPLODING && game.isStable {
+			game.gamePlayState.state = STANDBY
+			game.stableThreshold = 0
+			game.NextPlayer()
+		}
 	}
 
 	// game.camera.Update(elapsed)
-	fmt.Println(game.isStable)
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
@@ -211,6 +227,10 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	for _, entity := range game.entities {
 		// entity.Render(game.camera.Cam)
 		entity.Render(screen)
+	}
+
+	if game.isOver {
+		game.RenderGameOver(screen)
 	}
 
 	// game.camera.Render(screen)
@@ -247,6 +267,24 @@ func (game *StateGame) IsGameStable() bool {
 	return true
 }
 
+func (game *StateGame) IsGameOver() bool {
+	for i := range game.playerTeams {
+		team := &game.playerTeams[i]
+		aliveCount := 0
+		for j := 0; j < game.teamMemCount; j++ {
+			if !team.players[j].IsDeath() {
+				aliveCount++
+			}
+		}
+
+		if aliveCount == 0 {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 	if game.currentPlayer != nil {
 		game.currentPlayer.SetMovingDirection(direction)
@@ -279,4 +317,31 @@ func (game *StateGame) FireMissile() {
 	game.entities = append(game.entities, EntityHandler(missle))
 	game.currentPlayer.SetIsActive(false)
 	game.gamePlayState.state = FIRING
+}
+
+func (game *StateGame) RenderGameOver(screen *ebiten.Image) {
+	x, y := ebiten.WindowSize()
+	content := "Game over"
+
+	tt, ttErr := opentype.Parse(fonts.PressStart2P_ttf)
+	if ttErr != nil {
+		log.Fatal(ttErr)
+	}
+
+	nameMplusNormalFont, nameFontFaceErr := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    48,
+		DPI:     72,
+		Hinting: font.HintingVertical,
+	})
+	if nameFontFaceErr != nil {
+		log.Fatal(nameFontFaceErr)
+	}
+
+	nameBound := text.BoundString(nameMplusNormalFont, content)
+
+	posX := (float64(x) - (float64(nameBound.Max.X) - float64(nameBound.Min.X))) / 2
+	posY := float64(y) / 2
+
+	text.Draw(screen, content, nameMplusNormalFont, int(posX)-3, int(posY), color.RGBA{0xc4, 0xdd, 0xff, 0xff})
+	text.Draw(screen, content, nameMplusNormalFont, int(posX), int(posY), color.RGBA{0x65, 0x28, 0xf7, 0xff})
 }

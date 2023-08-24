@@ -7,6 +7,7 @@ const (
 	FIRING
 	EXPLODING
 	STABLE
+	OVER
 )
 
 type GamePlayState struct {

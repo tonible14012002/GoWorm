@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -15,6 +16,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+var (
+	teamCount    int = 2
+	teamMemCount int = 2
+)
+
 type StateGame struct {
 	stateMgr      *state.StateManager
 	eventMgr      *event.EventManager
@@ -27,6 +33,8 @@ type StateGame struct {
 	currentTeamId int
 	teamCount     int
 	teamMemCount  int
+	gamePlayState GamePlayState
+	isStable      bool
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -49,8 +57,8 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	}
 	game.camera.SetCameraSpeed(300)
 
-	game.teamCount = 2
-	game.teamMemCount = 2
+	game.teamCount = teamCount
+	game.teamMemCount = teamMemCount
 	game.playerTeams = make([]PlayerTeam, game.teamCount)
 	for i := range game.playerTeams {
 		team := &game.playerTeams[i]
@@ -95,6 +103,7 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	game.currentTeamId = 0
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
+	game.gamePlayState.state = STANDBY
 }
 
 func (game *StateGame) OnDestroy() {
@@ -122,11 +131,19 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ShiftArrowRight", func(ed *event.EventDetail) {
 		game.camera.Move(RIGHT)
 	})
-	game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
+	// game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
 	game.eventMgr.AddCallback(schema.Game, "Comma", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
 	game.eventMgr.AddCallback(schema.Game, "Dot", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
-	game.eventMgr.AddCallback(schema.Game, "KeyXDown", func(ed *event.EventDetail) { game.InitMissile() })
-	game.eventMgr.AddCallback(schema.Game, "KeyXUp", func(ed *event.EventDetail) { game.FireMissile() })
+	game.eventMgr.AddCallback(schema.Game, "KeyXDown", func(ed *event.EventDetail) {
+		if game.currentPlayer.isActive {
+			game.InitMissile()
+		}
+	})
+	game.eventMgr.AddCallback(schema.Game, "KeyXUp", func(ed *event.EventDetail) {
+		if game.currentPlayer.isActive {
+			game.FireMissile()
+		}
+	})
 }
 
 func (game *StateGame) Deactivate() {
@@ -137,7 +154,7 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowDown")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
-	game.eventMgr.RemoveCallback(schema.Game, "KeyN")
+	// game.eventMgr.RemoveCallback(schema.Game, "KeyN")
 	game.eventMgr.RemoveCallback(schema.Game, "Comma")
 	game.eventMgr.RemoveCallback(schema.Game, "Dot")
 	game.eventMgr.RemoveCallback(schema.Game, "KeyXDown")
@@ -173,7 +190,19 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		game.entities[i].Update(elapsed)
 	}
 
+	if !game.IsGameStable() || game.gamePlayState.state == FIRING {
+		game.isStable = false
+	} else {
+		game.isStable = true
+	}
+
+	if game.gamePlayState.state == EXPLODING && game.isStable {
+		game.gamePlayState.state = STANDBY
+		game.NextPlayer()
+	}
+
 	// game.camera.Update(elapsed)
+	fmt.Println(game.isStable)
 }
 
 func (game *StateGame) Render(screen *ebiten.Image) {
@@ -206,6 +235,16 @@ func (game *StateGame) Boom(pos common.Vectorf) {
 		debrises[i] = EntityHandler(createObject(2, pos, debrisVelo))
 	}
 	game.entities = append(game.entities, debrises...)
+	game.gamePlayState.state = EXPLODING
+}
+
+func (game *StateGame) IsGameStable() bool {
+	for i := range game.entities {
+		if !game.entities[i].IsStable() {
+			return false
+		}
+	}
+	return true
 }
 
 func (game *StateGame) MoveCrosshair(direction MovingDirection) {
@@ -215,7 +254,6 @@ func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 }
 
 func (game *StateGame) NextPlayer() {
-	game.currentPlayer.SetIsActive(false)
 	game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
@@ -228,6 +266,9 @@ func (game *StateGame) InitMissile() {
 func (game *StateGame) FireMissile() {
 	game.currentPlayer.FireMissile()
 	missle := createMissile(game.currentPlayer.pos.X, game.currentPlayer.pos.Y)
+
 	missle.Fire(game.currentPlayer.crosshairAngle, game.currentPlayer.GetEnergyAmountPercent())
 	game.entities = append(game.entities, EntityHandler(missle))
+	game.currentPlayer.SetIsActive(false)
+	game.gamePlayState.state = FIRING
 }

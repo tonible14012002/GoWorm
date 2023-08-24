@@ -219,7 +219,7 @@ func (p *PlayerEntity) SetMovingDirection(movingDirection MovingDirection) {
 }
 
 func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {
-	posX := float32(p.pos.X) - float32(p.animation.GetSpriteSize().X)/2 - 20
+	posX := float32(p.pos.X) - 10
 	posY := float32(p.pos.Y) + float32(maxEnergy)/2
 
 	for i := 0; i <= int(maxEnergy)+1; i++ {

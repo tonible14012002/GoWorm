@@ -254,8 +254,16 @@ func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 }
 
 func (game *StateGame) NextPlayer() {
-	game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
-	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+	foundNext := false
+	for !foundNext {
+		game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
+		game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+
+		// skip death players
+		if !game.currentPlayer.IsDeath() {
+			foundNext = true
+		}
+	}
 	game.currentPlayer.SetIsActive(true)
 }
 

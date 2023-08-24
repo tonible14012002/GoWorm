@@ -186,7 +186,9 @@ func (p *PlayerEntity) Render(screen *ebiten.Image) {
 }
 
 func (p *PlayerEntity) IsDeath() bool {
-	return false
+	x, y := ebiten.WindowSize()
+
+	return p.health <= 0 || (p.pos.X < 0 || p.pos.X > float64(x)) || (p.pos.Y < 0 || p.pos.Y > float64(y))
 }
 func (p *PlayerEntity) DoBouncing() {}
 func (p *PlayerEntity) DoFalling()  {}

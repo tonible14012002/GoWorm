@@ -2,6 +2,7 @@ package game
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/tonible14012002/go_game/engine/animation"
 
@@ -22,6 +23,11 @@ func createPlayer(size int, spriteInfo animation.SpriteInfo, info ...common.Vect
 
 func createMissile(posX, posY float64) *Missile {
 	return (&Missile{}).Setup(common.Vectorf{X: posX, Y: posY})
+}
+
+func IsInsideCircle(x, y int, posX, posY float64, radius uint) bool {
+	distanceSquared := math.Pow((float64(x)-posX), 2) + math.Pow((float64(y)-posY), 2)
+	return distanceSquared <= math.Pow(float64(radius), 2)
 }
 
 func getMissileColor(value float64) color.RGBA {

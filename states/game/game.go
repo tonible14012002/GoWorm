@@ -1,11 +1,15 @@
 package game
 
 import (
+	"image/color"
+	"log"
 	"math"
 	"math/rand"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/tonible14012002/go_game/engine/animation"
 	"github.com/tonible14012002/go_game/engine/common"
 	"github.com/tonible14012002/go_game/engine/constant"
@@ -13,20 +17,32 @@ import (
 	"github.com/tonible14012002/go_game/engine/schema"
 	"github.com/tonible14012002/go_game/engine/state"
 	"golang.org/x/exp/slices"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
+)
+
+var (
+	teamCount          int = 2
+	teamMemCount       int = 2
+	maxStableThreshold int = 300
 )
 
 type StateGame struct {
-	stateMgr      *state.StateManager
-	eventMgr      *event.EventManager
-	world         WorldMap
-	entities      Entities
-	randGen       *rand.Rand
-	camera        Camera
-	currentPlayer *PlayerEntity
-	playerTeams   []PlayerTeam
-	currentTeamId int
-	teamCount     int
-	teamMemCount  int
+	stateMgr        *state.StateManager
+	eventMgr        *event.EventManager
+	world           WorldMap
+	entities        Entities
+	randGen         *rand.Rand
+	camera          Camera
+	currentPlayer   *PlayerEntity
+	playerTeams     []PlayerTeam
+	currentTeamId   int
+	teamCount       int
+	teamMemCount    int
+	gamePlayState   GamePlayState
+	isStable        bool
+	stableThreshold int
+	isOver          bool
 }
 
 func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.EventManager) {
@@ -49,8 +65,8 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	}
 	game.camera.SetCameraSpeed(300)
 
-	game.teamCount = 1
-	game.teamMemCount = 1
+	game.teamCount = teamCount
+	game.teamMemCount = teamMemCount
 	game.playerTeams = make([]PlayerTeam, game.teamCount)
 	for i := range game.playerTeams {
 		team := &game.playerTeams[i]
@@ -60,10 +76,10 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 				player = team.CreatePlayer(
 					PLAYER_DEFAULT_SIZE,
 					animation.SpriteInfo{
-						Src:            "assets/sprites/player/B_witch_charge.png",
-						RowCount:       5,
+						Src:            "assets/sprites/player/ChikBoy_idle.png",
+						RowCount:       6,
 						ColumnCount:    1,
-						TotalFrame:     5,
+						TotalFrame:     6,
 						FrameDir:       animation.DOWN,
 						PeriodDuration: 1,
 					},
@@ -95,6 +111,7 @@ func (game *StateGame) OnCreate(stateMgr *state.StateManager, eventMgr *event.Ev
 	game.currentTeamId = 0
 	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
 	game.currentPlayer.SetIsActive(true)
+	game.gamePlayState.state = STANDBY
 }
 
 func (game *StateGame) OnDestroy() {
@@ -122,11 +139,19 @@ func (game *StateGame) Activate() {
 	game.eventMgr.AddCallback(schema.Game, "ShiftArrowRight", func(ed *event.EventDetail) {
 		game.camera.Move(RIGHT)
 	})
-	game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
+	// game.eventMgr.AddCallback(schema.Game, "KeyN", func(ed *event.EventDetail) { game.NextPlayer() })
 	game.eventMgr.AddCallback(schema.Game, "Comma", func(ed *event.EventDetail) { game.MoveCrosshair(Up) })
 	game.eventMgr.AddCallback(schema.Game, "Dot", func(ed *event.EventDetail) { game.MoveCrosshair(Down) })
-	game.eventMgr.AddCallback(schema.Game, "KeyXDown", func(ed *event.EventDetail) { game.InitMissile() })
-	game.eventMgr.AddCallback(schema.Game, "KeyXUp", func(ed *event.EventDetail) { game.FireMissile() })
+	game.eventMgr.AddCallback(schema.Game, "KeyXDown", func(ed *event.EventDetail) {
+		if game.currentPlayer.isActive {
+			game.InitMissile()
+		}
+	})
+	game.eventMgr.AddCallback(schema.Game, "KeyXUp", func(ed *event.EventDetail) {
+		if game.currentPlayer.isActive {
+			game.FireMissile()
+		}
+	})
 }
 
 func (game *StateGame) Deactivate() {
@@ -137,7 +162,7 @@ func (game *StateGame) Deactivate() {
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowLeft")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowDown")
 	game.eventMgr.RemoveCallback(schema.Game, "ShiftArrowRight")
-	game.eventMgr.RemoveCallback(schema.Game, "KeyN")
+	// game.eventMgr.RemoveCallback(schema.Game, "KeyN")
 	game.eventMgr.RemoveCallback(schema.Game, "Comma")
 	game.eventMgr.RemoveCallback(schema.Game, "Dot")
 	game.eventMgr.RemoveCallback(schema.Game, "KeyXDown")
@@ -173,6 +198,26 @@ func (game *StateGame) Update(elapsed time.Duration) {
 		game.entities[i].Update(elapsed)
 	}
 
+	if game.gamePlayState.state == FIRING || game.gamePlayState.state == EXPLODING {
+		game.stableThreshold += 1
+	}
+
+	// Update game play state
+	if (!game.IsGameStable() || game.gamePlayState.state == FIRING) && game.stableThreshold <= maxStableThreshold {
+		game.isStable = false
+	} else {
+		game.isStable = true
+	}
+	if game.IsGameOver() {
+		game.isOver = true
+	} else {
+		if game.gamePlayState.state == EXPLODING && game.isStable {
+			game.gamePlayState.state = STANDBY
+			game.stableThreshold = 0
+			game.NextPlayer()
+		}
+	}
+
 	// game.camera.Update(elapsed)
 }
 
@@ -182,6 +227,10 @@ func (game *StateGame) Render(screen *ebiten.Image) {
 	for _, entity := range game.entities {
 		// entity.Render(game.camera.Cam)
 		entity.Render(screen)
+	}
+
+	if game.isOver {
+		game.RenderGameOver(screen)
 	}
 
 	// game.camera.Render(screen)
@@ -206,6 +255,34 @@ func (game *StateGame) Boom(pos common.Vectorf) {
 		debrises[i] = EntityHandler(createObject(2, pos, debrisVelo))
 	}
 	game.entities = append(game.entities, debrises...)
+	game.gamePlayState.state = EXPLODING
+}
+
+func (game *StateGame) IsGameStable() bool {
+	for i := range game.entities {
+		if !game.entities[i].IsStable() {
+			return false
+		}
+	}
+	return true
+}
+
+func (game *StateGame) IsGameOver() bool {
+	for i := range game.playerTeams {
+		team := &game.playerTeams[i]
+		aliveCount := 0
+		for j := 0; j < game.teamMemCount; j++ {
+			if !team.players[j].IsDeath() {
+				aliveCount++
+			}
+		}
+
+		if aliveCount == 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (game *StateGame) MoveCrosshair(direction MovingDirection) {
@@ -215,9 +292,16 @@ func (game *StateGame) MoveCrosshair(direction MovingDirection) {
 }
 
 func (game *StateGame) NextPlayer() {
-	game.currentPlayer.SetIsActive(false)
-	game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
-	game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+	foundNext := false
+	for !foundNext {
+		game.currentTeamId = (game.currentTeamId + 1) % game.teamCount
+		game.currentPlayer = game.playerTeams[game.currentTeamId].GetNextPlayer()
+
+		// skip death players
+		if !game.currentPlayer.IsDeath() {
+			foundNext = true
+		}
+	}
 	game.currentPlayer.SetIsActive(true)
 }
 
@@ -228,6 +312,36 @@ func (game *StateGame) InitMissile() {
 func (game *StateGame) FireMissile() {
 	game.currentPlayer.FireMissile()
 	missle := createMissile(game.currentPlayer.pos.X, game.currentPlayer.pos.Y)
+
 	missle.Fire(game.currentPlayer.crosshairAngle, game.currentPlayer.GetEnergyAmountPercent())
 	game.entities = append(game.entities, EntityHandler(missle))
+	game.currentPlayer.SetIsActive(false)
+	game.gamePlayState.state = FIRING
+}
+
+func (game *StateGame) RenderGameOver(screen *ebiten.Image) {
+	x, y := ebiten.WindowSize()
+	content := "Game over"
+
+	tt, ttErr := opentype.Parse(fonts.PressStart2P_ttf)
+	if ttErr != nil {
+		log.Fatal(ttErr)
+	}
+
+	nameMplusNormalFont, nameFontFaceErr := opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    48,
+		DPI:     72,
+		Hinting: font.HintingVertical,
+	})
+	if nameFontFaceErr != nil {
+		log.Fatal(nameFontFaceErr)
+	}
+
+	nameBound := text.BoundString(nameMplusNormalFont, content)
+
+	posX := (float64(x) - (float64(nameBound.Max.X) - float64(nameBound.Min.X))) / 2
+	posY := float64(y) / 2
+
+	text.Draw(screen, content, nameMplusNormalFont, int(posX)-3, int(posY), color.RGBA{0xc4, 0xdd, 0xff, 0xff})
+	text.Draw(screen, content, nameMplusNormalFont, int(posX), int(posY), color.RGBA{0x65, 0x28, 0xf7, 0xff})
 }

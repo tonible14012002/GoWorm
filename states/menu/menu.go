@@ -191,7 +191,7 @@ func (menu *StateMenu) RenderQuitItem(screen *ebiten.Image, color color.RGBA) {
 func (menu *StateMenu) RenderControlItem(screen *ebiten.Image, textColor color.RGBA) {
 	x, y := ebiten.WindowSize()
 	label := "Control (C)"
-	detail := "• Direction: Comma (,), Period (.)\n\n• Fire (hold to charge): X\n\n• Next player: N"
+	detail := "• Direction: Comma (,), Period (.)\n\n• Fire (hold to charge): X"
 
 	if menu.showControl {
 		text.Draw(screen, label, menu.fontFaces[MENU], int((x-menuWidth)/2)+25, int((y-menuHeight)/2)+110, textColor)

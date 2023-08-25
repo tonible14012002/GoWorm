@@ -1,6 +1,7 @@
 package game
 
 import (
+	"image/color"
 	"math"
 	"time"
 
@@ -23,8 +24,11 @@ const (
 	crosshairRadius    float64 = 35
 	crosshairScale     float64 = 0.3
 
-	maxEnergy       float64 = 40
-	maxChargingTime float64 = 2
+	maxEnergy         float64 = 40
+	maxChargingTime   float64 = 2
+	maxHealth         float64 = 200
+	healthRenderScale float64 = 4
+	maxDamage         float64 = 60
 )
 
 type PlayerEntity struct {
@@ -37,7 +41,7 @@ type PlayerEntity struct {
 	crosshairSprite    animation.Animation
 	crosshairAngle     float64
 	isActive           bool
-	health             int
+	health             float64
 	energy             float64
 	isCharing          bool
 	crossHairDirection MovingDirection
@@ -49,6 +53,7 @@ func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info .
 	p.isStable = false
 	p.crosshairAngle = 0
 	p.crossHairDirection = None
+	p.health = maxHealth
 
 	switch len(info) {
 	case 1:
@@ -76,7 +81,6 @@ func (p *PlayerEntity) Setup(radius int, spriteInfo animation.SpriteInfo, info .
 	p.crosshairSprite.Setup()
 	p.animation.Setup()
 	p.animation.StartAnimation(animation.FOREVER)
-	p.health = 100
 	p.isCharing = false
 	return p
 }
@@ -171,8 +175,11 @@ func (p *PlayerEntity) Render(screen *ebiten.Image) {
 	op.GeoM.Translate(p.pos.X-float64(spriteSize.X)/2, p.pos.Y-float64(spriteSize.Y)/2)
 	p.animation.Render(screen, op)
 
+	p.RenderHealth(screen)
+
 	if p.isActive {
 		p.RenderCrosshair(screen)
+		p.RenderActiveSign(screen)
 	}
 	if p.isCharing {
 		p.RenderMissileBuffer(screen)
@@ -180,11 +187,29 @@ func (p *PlayerEntity) Render(screen *ebiten.Image) {
 }
 
 func (p *PlayerEntity) IsDeath() bool {
-	return false
+	x, y := ebiten.WindowSize()
+
+	return p.health <= 0 || (p.pos.X < 0 || p.pos.X > float64(x)) || (p.pos.Y < 0 || p.pos.Y > float64(y))
 }
 func (p *PlayerEntity) DoBouncing() {}
 func (p *PlayerEntity) DoFalling()  {}
-func (p *PlayerEntity) DoBomb()     {}
+func (p *PlayerEntity) DoBomb(intArray []int) {
+	originX := intArray[0]
+	originY := intArray[1]
+	radius := intArray[2]
+	graphicSize := intArray[3]
+
+	scaledOriginX := int(originX) / graphicSize
+	scaledOriginY := int(originY) / graphicSize
+	scaledPlayerX := int(p.pos.X) / graphicSize
+	scaledPlayerY := int(p.pos.Y) / graphicSize
+
+	distanceSquared := math.Pow((float64(scaledPlayerX)-float64(scaledOriginX)), 2) + math.Pow((float64(scaledPlayerY)-float64(scaledOriginY)), 2)
+
+	if distanceSquared <= math.Pow(float64(radius), 2) {
+		p.health = p.health - (1-distanceSquared/math.Pow(float64(radius), 2))*maxDamage
+	}
+}
 func (p *PlayerEntity) ToBeRemove() bool {
 	return false
 }
@@ -197,20 +222,44 @@ func (p *PlayerEntity) SetMovingDirection(movingDirection MovingDirection) {
 }
 
 func (p *PlayerEntity) RenderMissileBuffer(screen *ebiten.Image) {
-	posX := float32(p.pos.X) - float32(maxEnergy)/2
-	posY := float32(p.pos.Y) - float32(p.animation.GetSpriteSize().Y)/2 - 20
+	posX := float32(p.pos.X) - 10
+	posY := float32(p.pos.Y) + float32(maxEnergy)/2
 
 	for i := 0; i <= int(maxEnergy)+1; i++ {
 		if i < int(p.GetEnergyAmountCharged())+1 || i == 0 || i == int(maxEnergy)+1 {
-			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 7, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX, posY-float32(i), 7, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
 
 		} else {
-			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
-			vector.DrawFilledRect(screen, posX+float32(i), posY+6, 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX, posY-float32(i), 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
+			vector.DrawFilledRect(screen, posX+6, posY-float32(i), 1, 1, getMissileColor(p.GetEnergyAmountCharged()), false)
 		}
 	}
 }
 
 func (p *PlayerEntity) IsExplosion() (bool, *common.Vectorf, int, float64) {
 	return false, nil, 0, 0
+}
+
+func (p *PlayerEntity) RenderHealth(screen *ebiten.Image) {
+	posX := float32(p.pos.X) - float32(maxHealth/healthRenderScale)/2
+	posY := float32(p.pos.Y) - float32(p.animation.GetSpriteSize().Y)/2 - 16
+
+	for i := 0; i <= int(maxHealth/healthRenderScale)+1; i++ {
+		if i < int(p.health/healthRenderScale)+1 || i == 0 || i == int(maxHealth/healthRenderScale)+1 {
+			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 5, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+
+		} else {
+			vector.DrawFilledRect(screen, posX+float32(i), posY, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+			vector.DrawFilledRect(screen, posX+float32(i), posY+4, 1, 1, color.RGBA{0xff, 0x00, 0x00, 0xff}, false)
+		}
+	}
+}
+
+func (p *PlayerEntity) RenderActiveSign(screen *ebiten.Image) {
+	posX := float32(p.pos.X)
+	posY := float32(p.pos.Y) - float32(p.animation.GetSpriteSize().Y)/2 - 20
+
+	for i := 0; i <= 8; i++ {
+		vector.DrawFilledRect(screen, posX-float32(i)/2, posY-float32(i), float32(i), 1, color.RGBA{0x64, 0xcc, 0xc5, 0xff}, false)
+	}
 }
